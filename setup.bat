@@ -1,16 +1,51 @@
 @echo off
 setlocal
 cd /d "%~dp0"
-where python >nul 2>nul || (echo [error] python not on PATH & exit /b 1)
-if not exist ".venv" (
-  python -m venv .venv || exit /b 1
+
+where python >nul 2>nul
+if errorlevel 1 (
+  echo.
+  echo [error] python not on PATH. Install Python 3.10~3.12 first: https://www.python.org/downloads/
+  echo.
+  pause
+  exit /b 1
 )
-call .venv\Scripts\activate.bat
+
+if not exist ".venv" (
+  echo [setup] Creating virtual environment...
+  python -m venv .venv
+  if errorlevel 1 (
+    echo [error] Failed to create venv.
+    pause
+    exit /b 1
+  )
+)
+
+call ".venv\Scripts\activate.bat"
 python -m pip install --upgrade pip
+if errorlevel 1 (
+  echo [error] pip upgrade failed.
+  pause
+  exit /b 1
+)
+
 pip install -e .
+if errorlevel 1 (
+  echo.
+  echo [error] Dependency install failed.
+  echo.
+  pause
+  exit /b 1
+)
+
 if not exist ".env" (
   copy .env.example .env >nul
-  echo Created .env from .env.example
+  echo [setup] Created .env from .env.example
 )
+
 echo.
-echo Setup complete. Run run.bat to start.
+echo ============================================
+echo  Setup complete. Double-click run.bat to start.
+echo ============================================
+echo.
+pause
