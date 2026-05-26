@@ -71,42 +71,10 @@ def _load_existing_results() -> None:
             )
 
 
-# ─────────────────────────── sidebar ───────────────────────────
+# ─────────────────────────── sidebar (project mgmt only) ───────────────────────────
 def render_sidebar() -> None:
-    s: settings_mod.Settings = st.session_state.settings
     with st.sidebar:
-        st.header("⚙ API 설정")
-
-        s.base_url = st.text_input("API URL", value=s.base_url, help="Ubion LiteLLM 프록시 주소")
-        s.api_key = st.text_input("API 키", value=s.api_key, type="password", help="사내 대시보드(/ui/)에서 발급한 virtual key")
-        st.caption(f"모델: 💰 **{settings_mod.FIXED_MODEL}** (저렴, 고정)")
-
-        with st.expander("고급 설정", expanded=False):
-            s.temperature = st.slider("Temperature", 0.0, 1.5, s.temperature, step=0.1)
-            s.max_tokens = st.slider("Max Tokens", 1024, 16384, s.max_tokens, step=512)
-            s.parallelism = st.slider("병렬 실행", 1, 8, s.parallelism)
-
-        st.subheader("공통 변수")
-        s.target_keyword = st.text_input("타깃 키워드", value=s.target_keyword, placeholder="예: AI 마케팅 자동화")
-        s.brand_name = st.text_input("브랜드명", value=s.brand_name, placeholder="예: Acme Corp")
-
-        c1, c2 = st.columns(2)
-        with c1:
-            if st.button("연결 테스트", use_container_width=True):
-                provider_obj = llm_mod.build_provider(s)
-                ok, msg = provider_obj.ping()
-                st.session_state.ping_status = (ok, msg)
-        with c2:
-            if st.button("💾 저장", use_container_width=True, type="primary"):
-                settings_mod.save(s)
-                st.success("저장 완료")
-
-        if st.session_state.ping_status:
-            ok, msg = st.session_state.ping_status
-            (st.success if ok else st.error)(f"{'✅' if ok else '❌'} {msg}")
-
-        st.divider()
-        st.subheader("프로젝트")
+        st.header("📂 프로젝트")
         existing = sorted(
             [p.name for p in PROJECTS_DIR.iterdir() if p.is_dir()] if PROJECTS_DIR.exists() else []
         )
@@ -118,7 +86,7 @@ def render_sidebar() -> None:
         )
         if chosen == "(새 프로젝트)":
             new_name = st.text_input("새 프로젝트 이름", value="", placeholder=f"project-{datetime.now():%Y%m%d}")
-            if st.button("➕ 만들기", use_container_width=True):
+            if st.button("➕ 만들기", type="primary", use_container_width=True):
                 final = new_name.strip() or f"project-{datetime.now():%Y%m%d-%H%M%S}"
                 st.session_state.project_name = final
                 st.session_state.results = {}
@@ -139,6 +107,55 @@ def render_sidebar() -> None:
                 _load_existing_results()
                 st.rerun()
 
+        if st.session_state.project_name:
+            st.caption(f"📁 `data/projects/{st.session_state.project_name}/`")
+
+
+# ─────────────────────────── top bar (API 설정) ───────────────────────────
+def render_top_api_bar() -> None:
+    s: settings_mod.Settings = st.session_state.settings
+    configured = bool(s.api_key)
+    ping = st.session_state.ping_status
+    if ping is not None:
+        ok, _ = ping
+        badge = "✅ 연결 확인됨" if ok else "❌ 연결 실패"
+    elif configured:
+        badge = "🟡 키 저장됨 · 연결 미확인"
+    else:
+        badge = "⚠️ API 키 미설정 — 펼쳐서 입력하세요"
+
+    with st.expander(f"⚙ API 설정 — {badge} · 모델 `{settings_mod.FIXED_MODEL}`", expanded=not configured):
+        c1, c2 = st.columns([2, 3])
+        with c1:
+            s.base_url = st.text_input("API URL", value=s.base_url, help="Ubion LiteLLM 프록시 주소")
+        with c2:
+            s.api_key = st.text_input("API 키", value=s.api_key, type="password", help="사내 대시보드(/ui/)에서 발급한 virtual key")
+
+        with st.expander("고급 설정", expanded=False):
+            c3, c4, c5 = st.columns(3)
+            with c3:
+                s.temperature = st.slider("Temperature", 0.0, 1.5, s.temperature, step=0.1)
+            with c4:
+                s.max_tokens = st.slider("Max Tokens", 1024, 16384, s.max_tokens, step=512)
+            with c5:
+                s.parallelism = st.slider("병렬 실행", 1, 8, s.parallelism)
+
+        b1, b2, b3 = st.columns([1, 1, 4])
+        with b1:
+            if st.button("연결 테스트", use_container_width=True):
+                provider_obj = llm_mod.build_provider(s)
+                ok, msg = provider_obj.ping()
+                st.session_state.ping_status = (ok, msg)
+                st.rerun()
+        with b2:
+            if st.button("💾 저장", use_container_width=True, type="primary"):
+                settings_mod.save(s)
+                st.toast("API 설정 저장 완료", icon="💾")
+        with b3:
+            if ping is not None:
+                ok, msg = ping
+                (st.success if ok else st.error)(f"{'✅' if ok else '❌'} {msg}")
+
 
 # ─────────────────────────── left: studios ───────────────────────────
 STATUS_ICON = {"pending": "⚪", "running": "🟡", "done": "✅", "error": "❌"}
@@ -152,9 +169,9 @@ def render_studio_panel() -> None:
     if not ready:
         missing = []
         if not has_project:
-            missing.append("**1단계** — 사이드바(⚙ 왼쪽 `»` 클릭) → `프로젝트 선택` → `(새 프로젝트)` → 이름 입력 → `➕ 만들기`")
+            missing.append("**1단계** — 좌측 사이드바(`📂 프로젝트`) → `(새 프로젝트)` 선택 → 이름 입력 → `➕ 만들기`")
         if not has_subtitle:
-            missing.append("**2단계** — 우측 `자막 소스` 패널에서 .srt/.vtt/.ass/.txt 업로드")
+            missing.append("**2단계** — 우측 `🎬 자막 소스` 패널에서 .srt/.vtt/.ass/.txt 업로드")
         missing.append("**3단계** — 여기서 `▶ 전체 17개 실행`")
         st.info("\n\n".join(missing))
         return
@@ -326,6 +343,13 @@ def render_source_panel() -> None:
         st.caption("자막을 업로드하면 17개 스튜디오가 활성화됩니다.")
 
     st.divider()
+    st.subheader("📝 공통 변수")
+    s = st.session_state.settings
+    s.target_keyword = st.text_input("타깃 키워드", value=s.target_keyword, placeholder="예: AI 마케팅 자동화", key="kw")
+    s.brand_name = st.text_input("브랜드명", value=s.brand_name, placeholder="예: Acme Corp", key="brand")
+    st.caption("17개 스튜디오 프롬프트에 자동 주입됩니다. (선택)")
+
+    st.divider()
     with st.expander("ℹ️ 산출물 정책", expanded=False):
         st.markdown(
             "- 자막 원문은 외부 노출 금지. **재가공된 텍스트만** 산출됩니다.\n"
@@ -338,8 +362,9 @@ def render_source_panel() -> None:
 def main() -> None:
     _init_state()
     render_sidebar()
-    st.title("Text Marketing LM")
+    st.title("Subtitle Marketing Studio")
     st.caption("자막 1개 → 17가지 마케팅 텍스트 자산 (블로그·뉴스레터·LinkedIn·카드뉴스·SEO·PAS·광고·푸시·랜딩·리뷰·페르소나·태그·프로모션·보도자료 …)")
+    render_top_api_bar()
 
     left, center, right = st.columns([1.1, 1.4, 0.9], gap="medium")
     # Render right (source) first so subtitle_result is set before left (studios) checks it.
