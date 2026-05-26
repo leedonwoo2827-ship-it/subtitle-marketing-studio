@@ -146,9 +146,17 @@ STATUS_ICON = {"pending": "⚪", "running": "🟡", "done": "✅", "error": "❌
 
 def render_studio_panel() -> None:
     st.subheader("🎛 스튜디오")
-    ready = bool(st.session_state.subtitle_result) and bool(st.session_state.project_name)
+    has_project = bool(st.session_state.project_name)
+    has_subtitle = bool(st.session_state.subtitle_result)
+    ready = has_project and has_subtitle
     if not ready:
-        st.info("우측에서 프로젝트를 만들고 자막 파일을 업로드하세요.")
+        missing = []
+        if not has_project:
+            missing.append("**1단계** — 사이드바(⚙ 왼쪽 `»` 클릭) → `프로젝트 선택` → `(새 프로젝트)` → 이름 입력 → `➕ 만들기`")
+        if not has_subtitle:
+            missing.append("**2단계** — 우측 `자막 소스` 패널에서 .srt/.vtt/.ass/.txt 업로드")
+        missing.append("**3단계** — 여기서 `▶ 전체 17개 실행`")
+        st.info("\n\n".join(missing))
         return
 
     col_a, col_b = st.columns([2, 1])
@@ -297,10 +305,13 @@ def render_source_panel() -> None:
         accept_multiple_files=False,
     )
     if uploaded is not None:
-        result = subtitle_mod.parse(uploaded.name, raw_bytes=uploaded.getvalue())
-        st.session_state.subtitle_result = result
-        _save_source(result.text)
-        st.success(f"자막 파싱 완료 ({result.source_format})")
+        upload_key = f"{uploaded.name}:{uploaded.size}"
+        if st.session_state.get("_last_upload_key") != upload_key:
+            result = subtitle_mod.parse(uploaded.name, raw_bytes=uploaded.getvalue())
+            st.session_state.subtitle_result = result
+            st.session_state._last_upload_key = upload_key
+            _save_source(result.text)
+        st.success(f"자막 파싱 완료 ({st.session_state.subtitle_result.source_format})")
 
     r = st.session_state.subtitle_result
     if r:
@@ -331,12 +342,13 @@ def main() -> None:
     st.caption("자막 1개 → 17가지 마케팅 텍스트 자산 (블로그·뉴스레터·LinkedIn·카드뉴스·SEO·PAS·광고·푸시·랜딩·리뷰·페르소나·태그·프로모션·보도자료 …)")
 
     left, center, right = st.columns([1.1, 1.4, 0.9], gap="medium")
+    # Render right (source) first so subtitle_result is set before left (studios) checks it.
+    with right:
+        render_source_panel()
     with left:
         render_studio_panel()
     with center:
         render_output_panel()
-    with right:
-        render_source_panel()
 
 
 if __name__ == "__main__":
