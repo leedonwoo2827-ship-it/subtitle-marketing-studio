@@ -20,38 +20,16 @@
 STREAMLIT_SERVER_PORT=9000
 ```
 
-`tsbookmaker`(8610)와 같이 띄울 때 충돌 방지를 위해 별도 포트를 사용합니다.
+## API 설정
 
-## LLM 백엔드
+[Ubion LiteLLM 프록시](_context/litellm_kit/README.md)를 사용합니다. 모델은 `deepseek-v4-flash` 고정 (저렴 등급, 한국어 OK).
 
-사이드바(⚙)에서 둘 중 하나 선택:
+사이드바(⚙)에서:
 
-### 1) LiteLLM 프록시 (원격, OpenAI 호환)
+- **API URL** — 기본값 `http://192.168.50.119:4000` (사내 프록시)
+- **API 키** — 사내 LiteLLM 대시보드(`http://192.168.50.119:4000/ui/`)에서 발급받은 virtual key (`sk-...`)
 
-DeepSeek / OpenAI / Anthropic / 자체 호스팅 등 OpenAI 호환 엔드포인트면 모두 가능.
-
-| 프리셋 | 모델 |
-|---|---|
-| budget | `deepseek/deepseek-chat` |
-| balanced | `openai/gpt-4o-mini` |
-| premium | `anthropic/claude-sonnet-4-6` |
-| custom | 직접 입력 |
-
-`Base URL` + `API Key` + 모델을 입력하고 `연결 테스트` → 통과하면 `저장`.
-
-### 2) Ollama (로컬)
-
-[ollama.com](https://ollama.com) 설치 후 모델 풀:
-
-```bash
-ollama pull llama3.1:8b
-# 또는
-ollama pull qwen2.5:14b
-```
-
-사이드바에서 `Ollama` 선택 → 모델명 입력 → `연결 테스트`.
-
-> 로컬 LLM은 GPU/CPU 경합을 막기 위해 17개 스튜디오를 **순차 실행**(동시성 1)으로 강제합니다. 원격은 사이드바 `병렬 실행` 슬라이더(1~8)로 조정.
+`연결 테스트` → 통과하면 `저장`. 환경변수(`UBION_LITELLM_URL`/`UBION_LITELLM_KEY`)를 미리 설정해두면 자동 인식됩니다.
 
 ## 폴더 구조
 
@@ -85,9 +63,13 @@ subtitle-marketing-studio/
 3. `prompts/<key>_ko.md` 작성 (`<<SYSTEM>>` / `<<USER>>` 구분, `{subtitle}`/`{channel_guide}`/`{target_keyword}`/`{brand_name}` 슬롯)
 4. 필요 시 [../knowledge/channel-style-research.md](../knowledge/channel-style-research.md)에 신규 채널 섹션 추가
 
+## 모델 변경
+
+기본 `deepseek-v4-flash` 고정. 다른 모델로 바꾸려면 [../core/user_settings.py](../core/user_settings.py)의 `FIXED_MODEL` 상수를 수정하세요. 사용 가능한 모델 목록은 [Ubion 마이그레이션 키트](../_context/litellm_kit/README.md)의 "신/구 모델 매핑" 표 참조.
+
 ## 트러블슈팅
 
 - **`설치 실패`** — Python 3.10~3.12 필요. `python --version` 확인.
-- **`ollama 연결 실패`** — `ollama serve` 가 실행 중인지, `ollama list`에 해당 모델이 있는지 확인.
-- **`LiteLLM 401/403`** — Base URL 끝에 `/v1` 필요한 프로바이더가 있음. 공식 문서 확인.
-- **자막 파싱이 깨질 때** — `.srt`/`.vtt`/`.ass`/`.txt` 외 포맷은 미지원. SubRip(.srt)로 변환 후 재시도.
+- **`401 / 403`** — 사내 대시보드에서 virtual key 발급 여부 확인. URL 끝에 `/v1`을 직접 붙이지 마세요 (자동으로 추가됨).
+- **`Connection refused`** — VPN/사내망 접속 확인. `http://192.168.50.119:4000`은 사내 전용.
+- **자막 파싱 실패** — `.srt`/`.vtt`/`.ass`/`.txt` 외 포맷은 미지원. SubRip(.srt)로 변환 후 재시도.

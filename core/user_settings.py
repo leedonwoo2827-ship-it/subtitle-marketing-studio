@@ -1,4 +1,7 @@
-"""GUI-managed settings persisted to data/user_settings.json."""
+"""GUI-managed settings persisted to data/user_settings.json.
+
+Single provider: Ubion LiteLLM proxy with deepseek-v4-flash fixed.
+"""
 from __future__ import annotations
 
 import json
@@ -8,26 +11,22 @@ from pathlib import Path
 
 SETTINGS_PATH = Path(__file__).resolve().parent.parent / "data" / "user_settings.json"
 
+DEFAULT_BASE_URL = "http://192.168.50.119:4000"
+FIXED_MODEL = "deepseek-v4-flash"
+
 
 @dataclass
 class Settings:
-    provider: str = "litellm"  # "litellm" | "ollama"
-
-    # LiteLLM proxy
-    litellm_base_url: str = ""
-    litellm_api_key: str = ""
-    litellm_model: str = "deepseek/deepseek-chat"
-
-    # Ollama local
-    ollama_host: str = "http://localhost:11434"
-    ollama_model: str = "llama3.1:8b"
+    base_url: str = DEFAULT_BASE_URL
+    api_key: str = ""
+    model: str = FIXED_MODEL  # locked — no UI to change
 
     # Generation
     max_tokens: int = 4096
     temperature: float = 0.7
-    parallelism: int = 4  # remote default; local forced to 1 in runner
+    parallelism: int = 4
 
-    # Extras shared across studios
+    # Shared variables across studios
     target_keyword: str = ""
     brand_name: str = ""
 
@@ -36,11 +35,8 @@ class Settings:
 
 def _env_defaults() -> Settings:
     s = Settings()
-    s.litellm_base_url = os.environ.get("LITELLM_BASE_URL", s.litellm_base_url)
-    s.litellm_api_key = os.environ.get("LITELLM_API_KEY", s.litellm_api_key)
-    s.litellm_model = os.environ.get("LITELLM_MODEL", s.litellm_model)
-    s.ollama_host = os.environ.get("OLLAMA_HOST", s.ollama_host)
-    s.ollama_model = os.environ.get("OLLAMA_MODEL", s.ollama_model)
+    s.base_url = os.environ.get("UBION_LITELLM_URL", s.base_url)
+    s.api_key = os.environ.get("UBION_LITELLM_KEY", s.api_key)
     return s
 
 
@@ -54,10 +50,12 @@ def load() -> Settings:
         return base
     merged = asdict(base)
     merged.update({k: v for k, v in data.items() if k in merged})
+    merged["model"] = FIXED_MODEL  # always force
     return Settings(**merged)
 
 
 def save(settings: Settings) -> None:
+    settings.model = FIXED_MODEL
     SETTINGS_PATH.parent.mkdir(parents=True, exist_ok=True)
     SETTINGS_PATH.write_text(
         json.dumps(asdict(settings), ensure_ascii=False, indent=2),

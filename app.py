@@ -75,46 +75,16 @@ def _load_existing_results() -> None:
 def render_sidebar() -> None:
     s: settings_mod.Settings = st.session_state.settings
     with st.sidebar:
-        st.header("⚙ 설정")
+        st.header("⚙ API 설정")
 
-        st.subheader("LLM 백엔드")
-        provider = st.radio(
-            "Provider",
-            options=["litellm", "ollama"],
-            index=0 if s.provider == "litellm" else 1,
-            format_func=lambda v: "LiteLLM 프록시 (원격)" if v == "litellm" else "Ollama (로컬)",
-            horizontal=False,
-        )
-        s.provider = provider
+        s.base_url = st.text_input("API URL", value=s.base_url, help="Ubion LiteLLM 프록시 주소")
+        s.api_key = st.text_input("API 키", value=s.api_key, type="password", help="사내 대시보드(/ui/)에서 발급한 virtual key")
+        st.caption(f"모델: 💰 **{settings_mod.FIXED_MODEL}** (저렴, 고정)")
 
-        if provider == "litellm":
-            s.litellm_base_url = st.text_input("Base URL", value=s.litellm_base_url, placeholder="https://api.deepseek.com")
-            s.litellm_api_key = st.text_input("API Key", value=s.litellm_api_key, type="password")
-            preset = st.selectbox(
-                "모델 프리셋",
-                options=["budget", "balanced", "premium", "custom"],
-                index=3,
-                help="custom = 직접 입력",
-            )
-            preset_map = {
-                "budget": "deepseek/deepseek-chat",
-                "balanced": "openai/gpt-4o-mini",
-                "premium": "anthropic/claude-sonnet-4-6",
-            }
-            if preset != "custom":
-                s.litellm_model = preset_map[preset]
-                st.caption(f"모델: `{s.litellm_model}`")
-            else:
-                s.litellm_model = st.text_input("모델 ID", value=s.litellm_model)
-        else:
-            s.ollama_host = st.text_input("Ollama Host", value=s.ollama_host)
-            s.ollama_model = st.text_input("모델", value=s.ollama_model, placeholder="llama3.1:8b")
-            st.caption("로컬 Ollama 실행 필요 (https://ollama.com)")
-
-        st.subheader("생성 설정")
-        s.max_tokens = st.slider("최대 토큰", 1024, 16384, s.max_tokens, step=512)
-        s.temperature = st.slider("Temperature", 0.0, 1.5, s.temperature, step=0.1)
-        s.parallelism = st.slider("병렬 실행 (원격만)", 1, 8, s.parallelism)
+        with st.expander("고급 설정", expanded=False):
+            s.temperature = st.slider("Temperature", 0.0, 1.5, s.temperature, step=0.1)
+            s.max_tokens = st.slider("Max Tokens", 1024, 16384, s.max_tokens, step=512)
+            s.parallelism = st.slider("병렬 실행", 1, 8, s.parallelism)
 
         st.subheader("공통 변수")
         s.target_keyword = st.text_input("타깃 키워드", value=s.target_keyword, placeholder="예: AI 마케팅 자동화")

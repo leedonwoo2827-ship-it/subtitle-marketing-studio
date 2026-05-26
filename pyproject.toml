@@ -1,12 +1,11 @@
 [project]
-name = "textmarketing-lm"
+name = "subtitle-marketing-studio"
 version = "0.1.0"
-description = "Subtitle-to-17-marketing-asset Streamlit studio (tsbookmaker-style)"
+description = "Subtitle → 17 marketing text assets (Streamlit, Ubion LiteLLM proxy)"
 requires-python = ">=3.10,<3.13"
 dependencies = [
   "streamlit>=1.40",
-  "litellm>=1.50",
-  "ollama>=0.3",
+  "openai>=1.50",
   "python-dotenv>=1.0",
   "pandas>=2.0",
 ]
