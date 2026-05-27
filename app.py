@@ -16,7 +16,7 @@ from core import llm as llm_mod
 from core import subtitle as subtitle_mod
 from core import user_settings as settings_mod
 from core.runner import StudioResult, find_studio_dir, run_all, run_one, studio_dir_name
-from studio import list_studios, sections
+from studio import get_studio, list_studios, sections
 from studio._base import StudioContext
 
 load_dotenv()
