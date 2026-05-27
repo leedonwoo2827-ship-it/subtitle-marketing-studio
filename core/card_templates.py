@@ -122,10 +122,18 @@ body {
   border-radius: 999px; font-size: 24px; font-weight: 900;
   margin-top: 24px; align-self: flex-start;
 }
-.studio-card .footer {
-  margin-top: auto; padding-top: 20px;
-  font-size: 16px; color: #9ca3af;
-  letter-spacing: 0.04em;
+/* multi-block body: each block = small subhead + body paragraph (auto-broken
+   on sentence ends via sentence_break filter + white-space: pre-line). */
+.studio-card .block {
+  margin-bottom: 28px;
+}
+.studio-card .block:last-of-type { margin-bottom: 0; }
+.studio-card .block-subhead {
+  font-weight: 800; line-height: 1.35;
+  margin-bottom: 8px;
+}
+.studio-card .block-body {
+  line-height: 1.7; white-space: pre-line;
 }
 
 @media print {
@@ -181,33 +189,19 @@ _TPL_THREADS_QUICK = """
     display: flex; flex-direction: column;
     text-align: left;
   }
-  .threads-quick .text-half .role-label {
-    font-size: 22px; font-weight: 800; letter-spacing: 0.14em;
-    color: #1e3a8a; text-transform: uppercase; margin-bottom: 16px;
-  }
   .threads-quick .text-half .headline {
     font-family: """ + _FONTS_DISPLAY + """;
-    font-size: 64px; font-weight: 900; color: #0f172a;
-    line-height: 1.18; letter-spacing: -0.02em; margin: 0 0 22px;
+    font-size: 56px; font-weight: 900; color: #0f172a;
+    line-height: 1.2; letter-spacing: -0.02em; margin: 0 0 28px;
   }
-  .threads-quick .text-half .subhead {
-    font-size: 28px; color: #4b5563; line-height: 1.55; margin-bottom: 18px;
-  }
-  .threads-quick .text-half .body-text {
-    font-size: 24px; line-height: 1.7; color: #1f2937;
-    white-space: pre-line; flex: 1;
-  }
-  .threads-quick .text-half .cta-pill {
-    margin-top: 18px; align-self: flex-start;
-    padding: 14px 28px; background: #1e3a8a; color: #fef3c7;
-    border-radius: 999px; font-size: 22px; font-weight: 900;
-  }
+  .threads-quick .text-half .block-subhead { font-size: 24px; color: #0f172a; }
+  .threads-quick .text-half .block-body { font-size: 22px; color: #374151; }
   .threads-quick .text-half .tagline {
-    margin-top: 16px; font-size: 20px; color: #1e3a8a; font-weight: 700;
+    margin-top: 18px; font-size: 22px; color: #1e3a8a; font-weight: 800;
   }
 </style>
 <div class="threads-quick">
-  <div class="preamble">📐 Threads 간결형 3장 · 1080 × 1350 · 상단 일러스트 + 하단 텍스트</div>
+  <div class="preamble">📐 Threads 간결형 3장 · 1080 × 1350</div>
   {% for c in cards %}
   <div class="studio-card" data-card-index="{{ loop.index }}">
     <div class="inner">
@@ -215,11 +209,13 @@ _TPL_THREADS_QUICK = """
         <div class="big-icon">{{ c.icon | default('💬') }}</div>
       </div>
       <div class="text-half">
-        {% if c.role %}<div class="role-label">{{ c.role }}</div>{% endif %}
         <div class="headline">{{ c.headline | default('') }}</div>
-        {% if c.subhead %}<div class="subhead">{{ c.subhead }}</div>{% endif %}
-        {% if c.body %}<div class="body-text">{{ c.body }}</div>{% endif %}
-        {% if loop.last and c.cta %}<div class="cta-pill">{{ c.cta }}</div>{% endif %}
+        {% for b in c.blocks or [] %}
+        <div class="block">
+          {% if b.subhead %}<div class="block-subhead">{{ b.subhead }}</div>{% endif %}
+          {% if b.body %}<div class="block-body">{{ b.body | sentence_break }}</div>{% endif %}
+        </div>
+        {% endfor %}
         {% if c.tagline %}<div class="tagline">{{ c.tagline }}</div>{% endif %}
       </div>
     </div>
@@ -270,39 +266,25 @@ _TPL_THREADS_INSIGHT = """
     display: flex; flex-direction: column;
     text-align: left;
   }
-  .threads-insight .text-half .role-label {
-    font-size: 22px; font-weight: 800; letter-spacing: 0.14em;
-    color: #4338ca; text-transform: uppercase;
-    margin-bottom: 16px;
-  }
   .threads-insight .text-half .headline {
     font-family: """ + _FONTS_DISPLAY + """;
-    font-size: 58px; font-weight: 900; color: #1e1b4b;
-    line-height: 1.18; letter-spacing: -0.02em;
-    margin: 0 0 22px;
+    font-size: 52px; font-weight: 900; color: #1e1b4b;
+    line-height: 1.2; letter-spacing: -0.02em; margin: 0 0 26px;
   }
-  .threads-insight .text-half .subhead {
-    font-size: 26px; color: #4b5563; line-height: 1.55;
-    margin-bottom: 18px;
-  }
-  .threads-insight .text-half .body-text {
-    font-size: 24px; line-height: 1.7; color: #1f2937;
-    white-space: pre-line; flex: 1;
-  }
+  .threads-insight .text-half .block-subhead { font-size: 24px; color: #1e1b4b; }
+  .threads-insight .text-half .block-body { font-size: 22px; color: #374151; }
   .threads-insight .text-half .stat-block {
-    margin-top: 16px; padding: 16px 22px;
+    margin-top: 14px; padding: 14px 20px;
     background: #ede9fe; border-left: 6px solid #4338ca; border-radius: 0 10px 10px 0;
   }
-  .threads-insight .text-half .stat-value { font-size: 40px; font-weight: 900; color: #4338ca; }
+  .threads-insight .text-half .stat-value { font-size: 36px; font-weight: 900; color: #4338ca; }
   .threads-insight .text-half .stat-label { font-size: 18px; color: #4b5563; margin-top: 4px; }
   .threads-insight .text-half .tagline {
-    margin-top: 16px;
-    font-size: 22px; color: #4338ca; font-weight: 700;
-    letter-spacing: 0.02em;
+    margin-top: 18px; font-size: 22px; color: #4338ca; font-weight: 800;
   }
 </style>
 <div class="threads-insight">
-  <div class="preamble">📐 Threads 인사이트 5장 · 1080 × 1350 · 상단 일러스트 + 하단 텍스트</div>
+  <div class="preamble">📐 Threads 인사이트 5장 · 1080 × 1350</div>
   {% for c in cards %}
   <div class="studio-card" data-card-index="{{ loop.index }}">
     <div class="inner">
@@ -310,10 +292,13 @@ _TPL_THREADS_INSIGHT = """
         <div class="big-icon">{{ c.icon | default('💡') }}</div>
       </div>
       <div class="text-half">
-        {% if c.role %}<div class="role-label">{{ c.role }}</div>{% endif %}
         <div class="headline">{{ c.headline | default('') }}</div>
-        {% if c.subhead %}<div class="subhead">{{ c.subhead }}</div>{% endif %}
-        {% if c.body %}<div class="body-text">{{ c.body }}</div>{% endif %}
+        {% for b in c.blocks or [] %}
+        <div class="block">
+          {% if b.subhead %}<div class="block-subhead">{{ b.subhead }}</div>{% endif %}
+          {% if b.body %}<div class="block-body">{{ b.body | sentence_break }}</div>{% endif %}
+        </div>
+        {% endfor %}
         {% if c.stat %}
         <div class="stat-block">
           <div class="stat-value">{{ c.stat.value | default('') }}</div>
@@ -354,35 +339,23 @@ _TPL_INSTAGRAM_INFO = """
     padding: 52px 60px;
     display: flex; flex-direction: column; text-align: left;
   }
-  .ig-info .text-half .role-label {
-    font-size: 22px; font-weight: 800; letter-spacing: 0.14em;
-    color: #9d174d; text-transform: uppercase; margin-bottom: 14px;
-  }
   .ig-info .text-half .headline {
     font-family: """ + _FONTS_DISPLAY + """;
-    font-size: 56px; font-weight: 900; color: #1f2937;
-    line-height: 1.18; letter-spacing: -0.02em; margin: 0 0 20px;
+    font-size: 52px; font-weight: 900; color: #1f2937;
+    line-height: 1.2; letter-spacing: -0.02em; margin: 0 0 24px;
   }
-  .ig-info .text-half .subhead { font-size: 26px; color: #4b5563; line-height: 1.55; margin-bottom: 18px; }
-  .ig-info .text-half .body-text {
-    font-size: 24px; line-height: 1.7; color: #1f2937;
-    white-space: pre-line; flex: 1;
-  }
-  .ig-info .text-half .tags-row { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 18px; }
+  .ig-info .text-half .block-subhead { font-size: 24px; color: #9d174d; }
+  .ig-info .text-half .block-body { font-size: 22px; color: #374151; }
+  .ig-info .text-half .tags-row { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 14px; }
   .ig-info .text-half .tag {
-    padding: 8px 16px; border-radius: 999px;
+    padding: 6px 14px; border-radius: 999px;
     background: #fce7f3; color: #9d174d; border: 2px solid #fbcfe8;
-    font-size: 18px; font-weight: 700;
+    font-size: 17px; font-weight: 700;
   }
-  .ig-info .text-half .cta-pill {
-    margin-top: 16px; align-self: flex-start;
-    padding: 12px 24px; background: #1f2937; color: #fff;
-    border-radius: 999px; font-size: 22px; font-weight: 900;
-  }
-  .ig-info .text-half .tagline { margin-top: 14px; font-size: 20px; color: #be185d; font-weight: 700; }
+  .ig-info .text-half .tagline { margin-top: 14px; font-size: 20px; color: #be185d; font-weight: 800; }
 </style>
 <div class="ig-info">
-  <div class="preamble">📐 Instagram 정보형 5장 · 1080 × 1350 · 상단 일러스트 + 하단 텍스트</div>
+  <div class="preamble">📐 Instagram 정보형 5장 · 1080 × 1350</div>
   {% for c in cards %}
   <div class="studio-card" data-card-index="{{ loop.index }}">
     <div class="inner">
@@ -390,16 +363,18 @@ _TPL_INSTAGRAM_INFO = """
         <div class="big-icon">{{ c.icon | default('✨') }}</div>
       </div>
       <div class="text-half">
-        {% if c.role %}<div class="role-label">{{ c.role }}</div>{% endif %}
         <div class="headline">{{ c.headline | default('') }}</div>
-        {% if c.subhead %}<div class="subhead">{{ c.subhead }}</div>{% endif %}
-        {% if c.body %}<div class="body-text">{{ c.body }}</div>{% endif %}
+        {% for b in c.blocks or [] %}
+        <div class="block">
+          {% if b.subhead %}<div class="block-subhead">{{ b.subhead }}</div>{% endif %}
+          {% if b.body %}<div class="block-body">{{ b.body | sentence_break }}</div>{% endif %}
+        </div>
+        {% endfor %}
         {% if c.tags %}
         <div class="tags-row">
           {% for t in c.tags %}<span class="tag">#{{ t }}</span>{% endfor %}
         </div>
         {% endif %}
-        {% if loop.last and cta %}<div class="cta-pill">{{ cta }}</div>{% endif %}
         {% if c.tagline %}<div class="tagline">{{ c.tagline }}</div>{% endif %}
       </div>
     </div>
@@ -441,31 +416,26 @@ _TPL_INSTAGRAM_STORY = """
     text-align: left;
     color: #292524;
   }
-  .ig-story .text-half .role-label {
-    font-family: """ + _FONTS_SERIF + """;
-    font-size: 22px; font-style: italic; color: #78716c;
-    margin-bottom: 14px;
-  }
   .ig-story .text-half .headline {
     font-family: """ + _FONTS_SERIF + """;
-    font-weight: 800; font-size: 60px; color: #1c1917;
-    line-height: 1.22; letter-spacing: -0.005em; margin: 0 0 20px;
+    font-weight: 800; font-size: 56px; color: #1c1917;
+    line-height: 1.25; letter-spacing: -0.005em; margin: 0 0 24px;
   }
-  .ig-story .text-half .subhead {
-    font-size: 26px; color: #57534e; line-height: 1.6; margin-bottom: 18px;
-  }
-  .ig-story .text-half .body-text {
+  .ig-story .text-half .block-subhead {
     font-family: """ + _FONTS_SERIF + """;
-    font-size: 24px; line-height: 1.75; color: #292524;
-    white-space: pre-line; flex: 1;
+    font-size: 24px; color: #292524; font-weight: 700;
+  }
+  .ig-story .text-half .block-body {
+    font-family: """ + _FONTS_SERIF + """;
+    font-size: 22px; color: #44403c;
   }
   .ig-story .text-half .tagline {
     font-family: """ + _FONTS_SERIF + """;
-    margin-top: 16px; font-size: 22px; color: #78716c; font-style: italic;
+    margin-top: 18px; font-size: 22px; color: #78716c; font-style: italic;
   }
 </style>
 <div class="ig-story">
-  <div class="preamble">📐 Instagram 스토리텔링 7장 · 1080 × 1350 · 상단 일러스트 + 하단 텍스트 (명조)</div>
+  <div class="preamble">📐 Instagram 스토리텔링 7장 · 1080 × 1350 · 명조</div>
   {% for c in cards %}
   <div class="studio-card" data-card-index="{{ loop.index }}">
     <div class="inner">
@@ -473,10 +443,13 @@ _TPL_INSTAGRAM_STORY = """
         <div class="big-icon">{{ c.icon | default('🌅') }}</div>
       </div>
       <div class="text-half">
-        {% if c.role %}<div class="role-label">— {{ c.role }} —</div>{% endif %}
         <div class="headline">{{ c.headline | default('') }}</div>
-        {% if c.subhead %}<div class="subhead">{{ c.subhead }}</div>{% endif %}
-        {% if c.body %}<div class="body-text">{{ c.body }}</div>{% endif %}
+        {% for b in c.blocks or [] %}
+        <div class="block">
+          {% if b.subhead %}<div class="block-subhead">{{ b.subhead }}</div>{% endif %}
+          {% if b.body %}<div class="block-body">{{ b.body | sentence_break }}</div>{% endif %}
+        </div>
+        {% endfor %}
         {% if c.tagline %}<div class="tagline">{{ c.tagline }}</div>{% endif %}
       </div>
     </div>
@@ -511,29 +484,18 @@ _TPL_KAKAO = """
     padding: 36px 40px;
     display: flex; flex-direction: column; text-align: left;
   }
-  .kk .text-half .role-label {
-    font-size: 16px; font-weight: 800; letter-spacing: 0.14em;
-    color: #b45309; text-transform: uppercase; margin-bottom: 10px;
-  }
   .kk .text-half .headline {
     font-family: """ + _FONTS_DISPLAY + """;
-    font-size: 40px; font-weight: 900; color: #1c1917;
-    line-height: 1.22; letter-spacing: -0.02em; margin: 0 0 14px;
+    font-size: 36px; font-weight: 900; color: #1c1917;
+    line-height: 1.25; letter-spacing: -0.02em; margin: 0 0 16px;
   }
-  .kk .text-half .subhead { font-size: 20px; color: #57534e; line-height: 1.55; margin-bottom: 12px; }
-  .kk .text-half .body-text {
-    font-size: 18px; line-height: 1.7; color: #292524;
-    white-space: pre-line; flex: 1;
-  }
-  .kk .text-half .cta-pill {
-    margin-top: 12px; align-self: flex-start;
-    padding: 10px 22px; background: #422006; color: #fde047;
-    border-radius: 10px; font-size: 18px; font-weight: 900;
-  }
-  .kk .text-half .tagline { margin-top: 10px; font-size: 16px; color: #b45309; font-weight: 700; }
+  .kk .text-half .block { margin-bottom: 16px; }
+  .kk .text-half .block-subhead { font-size: 18px; color: #422006; }
+  .kk .text-half .block-body { font-size: 16px; color: #292524; }
+  .kk .text-half .tagline { margin-top: 12px; font-size: 16px; color: #b45309; font-weight: 800; }
 </style>
 <div class="kk">
-  <div class="preamble">📐 KakaoTalk 카드뉴스 · 800 × 800 · 상단 일러스트 + 하단 텍스트</div>
+  <div class="preamble">📐 KakaoTalk 카드뉴스 · 800 × 800</div>
   {% for c in cards %}
   <div class="studio-card" data-card-index="{{ loop.index }}">
     <div class="inner">
@@ -541,11 +503,13 @@ _TPL_KAKAO = """
         <div class="big-icon">{{ c.icon | default('💬') }}</div>
       </div>
       <div class="text-half">
-        {% if c.role %}<div class="role-label">{{ c.role }}</div>{% endif %}
         <div class="headline">{{ c.headline | default('') }}</div>
-        {% if c.subhead %}<div class="subhead">{{ c.subhead }}</div>{% endif %}
-        {% if c.body %}<div class="body-text">{{ c.body }}</div>{% endif %}
-        {% if c.button %}<div class="cta-pill">{{ c.button }}</div>{% endif %}
+        {% for b in c.blocks or [] %}
+        <div class="block">
+          {% if b.subhead %}<div class="block-subhead">{{ b.subhead }}</div>{% endif %}
+          {% if b.body %}<div class="block-body">{{ b.body | sentence_break }}</div>{% endif %}
+        </div>
+        {% endfor %}
         {% if c.tagline %}<div class="tagline">{{ c.tagline }}</div>{% endif %}
       </div>
     </div>
@@ -564,8 +528,21 @@ _TEMPLATES: dict[str, str] = {
 }
 
 
+_RX_SENTENCE_END = re.compile(r"([.!?])[ \t]+(?=\S)")
+
+
+def _sentence_break(text: str | None) -> str:
+    """Insert a newline after every sentence-ending period/!/? followed by
+    whitespace, so blocks of prose break visually with `white-space: pre-line`."""
+    if not text:
+        return ""
+    return _RX_SENTENCE_END.sub(r"\1\n", str(text))
+
+
 def _env() -> jinja2.Environment:
-    return jinja2.Environment(autoescape=True, trim_blocks=True, lstrip_blocks=True)
+    env = jinja2.Environment(autoescape=True, trim_blocks=True, lstrip_blocks=True)
+    env.filters["sentence_break"] = _sentence_break
+    return env
 
 
 def render_cards(channel_key: str, data: dict, *, title: str, brand: str = "") -> str:
