@@ -151,27 +151,77 @@ _TPL_THREADS_QUICK = """
     padding: 28px;
     border-radius: 32px;
   }
-  .threads-quick .badge { background: #fef3c7; color: #78350f; }
-  .threads-quick .role-tag { background: #1e3a8a; color: #fbbf24; }
-  .threads-quick .headline { font-size: 76px; color: #0f172a; }
-  .threads-quick .tag { background: #1e3a8a; color: #fef3c7; }
-  .threads-quick .cta-pill { background: #1e3a8a; color: #fef3c7; }
-  .threads-quick .hashtags-row { color: #1e3a8a; }
+  .threads-quick .inner {
+    padding: 0; overflow: hidden;
+    display: flex; flex-direction: column;
+  }
+  .threads-quick .visual-half {
+    flex: 0 0 35%;
+    background: linear-gradient(180deg, #dbeafe 0%, #bfdbfe 100%);
+    display: flex; align-items: center; justify-content: center;
+    position: relative; overflow: hidden;
+  }
+  .threads-quick .visual-half::before,
+  .threads-quick .visual-half::after {
+    content: ""; position: absolute; border-radius: 50%;
+    border: 2px dashed rgba(30,58,138,0.18);
+    pointer-events: none;
+  }
+  .threads-quick .visual-half::before { width: 380px; height: 380px; }
+  .threads-quick .visual-half::after  { width: 240px; height: 240px; border-color: rgba(30,58,138,0.32); }
+  .threads-quick .big-icon {
+    font-size: 180px; line-height: 1;
+    filter: drop-shadow(0 10px 20px rgba(30,58,138,0.32));
+    position: relative; z-index: 2;
+  }
+  .threads-quick .text-half {
+    flex: 1 1 65%;
+    background: #ffffff;
+    padding: 52px 60px;
+    display: flex; flex-direction: column;
+    text-align: left;
+  }
+  .threads-quick .text-half .role-label {
+    font-size: 22px; font-weight: 800; letter-spacing: 0.14em;
+    color: #1e3a8a; text-transform: uppercase; margin-bottom: 16px;
+  }
+  .threads-quick .text-half .headline {
+    font-family: """ + _FONTS_DISPLAY + """;
+    font-size: 64px; font-weight: 900; color: #0f172a;
+    line-height: 1.18; letter-spacing: -0.02em; margin: 0 0 22px;
+  }
+  .threads-quick .text-half .subhead {
+    font-size: 28px; color: #4b5563; line-height: 1.55; margin-bottom: 18px;
+  }
+  .threads-quick .text-half .body-text {
+    font-size: 24px; line-height: 1.7; color: #1f2937;
+    white-space: pre-line; flex: 1;
+  }
+  .threads-quick .text-half .cta-pill {
+    margin-top: 18px; align-self: flex-start;
+    padding: 14px 28px; background: #1e3a8a; color: #fef3c7;
+    border-radius: 999px; font-size: 22px; font-weight: 900;
+  }
+  .threads-quick .text-half .tagline {
+    margin-top: 16px; font-size: 20px; color: #1e3a8a; font-weight: 700;
+  }
 </style>
 <div class="threads-quick">
-  <div class="preamble">📐 Threads 카드뉴스 3장 · 1080 × 1350</div>
+  <div class="preamble">📐 Threads 간결형 3장 · 1080 × 1350 · 상단 일러스트 + 하단 텍스트</div>
   {% for c in cards %}
   <div class="studio-card" data-card-index="{{ loop.index }}">
     <div class="inner">
-      <div class="top-meta">
-        <div class="badge">{{ c.icon | default('💬') }}</div>
+      <div class="visual-half">
+        <div class="big-icon">{{ c.icon | default('💬') }}</div>
       </div>
-      <div class="body">
+      <div class="text-half">
+        {% if c.role %}<div class="role-label">{{ c.role }}</div>{% endif %}
         <div class="headline">{{ c.headline | default('') }}</div>
-        <div class="subhead">{{ c.subhead | default('') }}</div>
+        {% if c.subhead %}<div class="subhead">{{ c.subhead }}</div>{% endif %}
+        {% if c.body %}<div class="body-text">{{ c.body }}</div>{% endif %}
         {% if loop.last and c.cta %}<div class="cta-pill">{{ c.cta }}</div>{% endif %}
+        {% if c.tagline %}<div class="tagline">{{ c.tagline }}</div>{% endif %}
       </div>
-      <div class="footer">{{ brand }}</div>
     </div>
   </div>
   {% endfor %}
@@ -186,41 +236,92 @@ _TPL_THREADS_INSIGHT = """
     padding: 28px;
     border-radius: 32px;
   }
-  .threads-insight .badge { background: #ede9fe; color: #4338ca; }
-  .threads-insight .role-tag { background: #4338ca; color: #ede9fe; }
-  .threads-insight .headline { font-size: 60px; color: #1e1b4b; }
-  .threads-insight .tag { background: #ede9fe; color: #4338ca; }
-  .threads-insight .body-text {
-    margin-top: 20px;
-    font-size: 24px; line-height: 1.6; color: #1f2937;
-    white-space: pre-line;
+  .threads-insight .inner {
+    padding: 0;
+    overflow: hidden;
+    display: flex; flex-direction: column;
   }
-  .threads-insight .stat-block { background: #ede9fe; border-left: 6px solid #4338ca; }
-  .threads-insight .stat-value { color: #4338ca; }
-  .threads-insight .hashtags-row { color: #4338ca; }
+  /* TOP HALF — large illustration / emoji centerpiece */
+  .threads-insight .visual-half {
+    flex: 0 0 35%;
+    background: linear-gradient(180deg, #ede9fe 0%, #ddd6fe 100%);
+    display: flex; align-items: center; justify-content: center;
+    position: relative; overflow: hidden;
+  }
+  .threads-insight .visual-half::before,
+  .threads-insight .visual-half::after {
+    content: "";
+    position: absolute; border-radius: 50%;
+    border: 2px dashed rgba(67,56,202,0.18);
+    pointer-events: none;
+  }
+  .threads-insight .visual-half::before { width: 380px; height: 380px; }
+  .threads-insight .visual-half::after  { width: 240px; height: 240px; border-color: rgba(67,56,202,0.30); }
+  .threads-insight .big-icon {
+    font-size: 180px; line-height: 1;
+    filter: drop-shadow(0 10px 20px rgba(67,56,202,0.32));
+    position: relative; z-index: 2;
+  }
+  /* BOTTOM ~65% — left-aligned text, generous body */
+  .threads-insight .text-half {
+    flex: 1 1 65%;
+    background: #ffffff;
+    padding: 52px 60px;
+    display: flex; flex-direction: column;
+    text-align: left;
+  }
+  .threads-insight .text-half .role-label {
+    font-size: 22px; font-weight: 800; letter-spacing: 0.14em;
+    color: #4338ca; text-transform: uppercase;
+    margin-bottom: 16px;
+  }
+  .threads-insight .text-half .headline {
+    font-family: """ + _FONTS_DISPLAY + """;
+    font-size: 58px; font-weight: 900; color: #1e1b4b;
+    line-height: 1.18; letter-spacing: -0.02em;
+    margin: 0 0 22px;
+  }
+  .threads-insight .text-half .subhead {
+    font-size: 26px; color: #4b5563; line-height: 1.55;
+    margin-bottom: 18px;
+  }
+  .threads-insight .text-half .body-text {
+    font-size: 24px; line-height: 1.7; color: #1f2937;
+    white-space: pre-line; flex: 1;
+  }
+  .threads-insight .text-half .stat-block {
+    margin-top: 16px; padding: 16px 22px;
+    background: #ede9fe; border-left: 6px solid #4338ca; border-radius: 0 10px 10px 0;
+  }
+  .threads-insight .text-half .stat-value { font-size: 40px; font-weight: 900; color: #4338ca; }
+  .threads-insight .text-half .stat-label { font-size: 18px; color: #4b5563; margin-top: 4px; }
+  .threads-insight .text-half .tagline {
+    margin-top: 16px;
+    font-size: 22px; color: #4338ca; font-weight: 700;
+    letter-spacing: 0.02em;
+  }
 </style>
 <div class="threads-insight">
-  <div class="preamble">📐 Threads 인사이트 5장 · 1080 × 1350</div>
+  <div class="preamble">📐 Threads 인사이트 5장 · 1080 × 1350 · 상단 일러스트 + 하단 텍스트</div>
   {% for c in cards %}
   <div class="studio-card" data-card-index="{{ loop.index }}">
     <div class="inner">
-      <div class="top-meta">
-        <div class="badge">{{ c.icon | default('📊') }}</div>
+      <div class="visual-half">
+        <div class="big-icon">{{ c.icon | default('💡') }}</div>
       </div>
-      <div class="body">
+      <div class="text-half">
+        {% if c.role %}<div class="role-label">{{ c.role }}</div>{% endif %}
         <div class="headline">{{ c.headline | default('') }}</div>
-        <div class="subhead">{{ c.subhead | default('') }}</div>
-        {% if c.body %}
-        <div class="body-text">{{ c.body }}</div>
-        {% endif %}
+        {% if c.subhead %}<div class="subhead">{{ c.subhead }}</div>{% endif %}
+        {% if c.body %}<div class="body-text">{{ c.body }}</div>{% endif %}
         {% if c.stat %}
         <div class="stat-block">
           <div class="stat-value">{{ c.stat.value | default('') }}</div>
           <div class="stat-label">{{ c.stat.label | default('') }}</div>
         </div>
         {% endif %}
+        {% if c.tagline %}<div class="tagline">{{ c.tagline }}</div>{% endif %}
       </div>
-      <div class="footer">{{ brand }}</div>
     </div>
   </div>
   {% endfor %}
@@ -235,33 +336,72 @@ _TPL_INSTAGRAM_INFO = """
     padding: 28px;
     border-radius: 32px;
   }
-  .ig-info .badge { background: linear-gradient(135deg, #fef3c7, #fce7f3); color: #9d174d; }
-  .ig-info .role-tag { background: #db2777; color: #fff; }
-  .ig-info .headline { font-size: 72px; color: #1f2937; }
-  .ig-info .tag { background: #fce7f3; color: #9d174d; border: 2px solid #fbcfe8; }
-  .ig-info .cta-pill { background: #1f2937; color: #fff; }
-  .ig-info .caption-block { background: linear-gradient(135deg, #fef3c7 0%, #fce7f3 100%); }
-  .ig-info .caption-title { color: #9d174d; }
-  .ig-info .hashtags-row { color: #be185d; }
+  .ig-info .inner { padding: 0; overflow: hidden; display: flex; flex-direction: column; }
+  .ig-info .visual-half {
+    flex: 0 0 35%;
+    background: linear-gradient(180deg, #fef3c7 0%, #fce7f3 100%);
+    display: flex; align-items: center; justify-content: center;
+    position: relative; overflow: hidden;
+  }
+  .ig-info .visual-half::before { content: ""; position: absolute; width: 360px; height: 360px;
+    border: 2px dashed rgba(157,23,77,0.22); border-radius: 50%; pointer-events: none; }
+  .ig-info .big-icon {
+    font-size: 180px; line-height: 1; position: relative; z-index: 2;
+    filter: drop-shadow(0 8px 18px rgba(157,23,77,0.30));
+  }
+  .ig-info .text-half {
+    flex: 1 1 65%; background: #ffffff;
+    padding: 52px 60px;
+    display: flex; flex-direction: column; text-align: left;
+  }
+  .ig-info .text-half .role-label {
+    font-size: 22px; font-weight: 800; letter-spacing: 0.14em;
+    color: #9d174d; text-transform: uppercase; margin-bottom: 14px;
+  }
+  .ig-info .text-half .headline {
+    font-family: """ + _FONTS_DISPLAY + """;
+    font-size: 56px; font-weight: 900; color: #1f2937;
+    line-height: 1.18; letter-spacing: -0.02em; margin: 0 0 20px;
+  }
+  .ig-info .text-half .subhead { font-size: 26px; color: #4b5563; line-height: 1.55; margin-bottom: 18px; }
+  .ig-info .text-half .body-text {
+    font-size: 24px; line-height: 1.7; color: #1f2937;
+    white-space: pre-line; flex: 1;
+  }
+  .ig-info .text-half .tags-row { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 18px; }
+  .ig-info .text-half .tag {
+    padding: 8px 16px; border-radius: 999px;
+    background: #fce7f3; color: #9d174d; border: 2px solid #fbcfe8;
+    font-size: 18px; font-weight: 700;
+  }
+  .ig-info .text-half .cta-pill {
+    margin-top: 16px; align-self: flex-start;
+    padding: 12px 24px; background: #1f2937; color: #fff;
+    border-radius: 999px; font-size: 22px; font-weight: 900;
+  }
+  .ig-info .text-half .tagline { margin-top: 14px; font-size: 20px; color: #be185d; font-weight: 700; }
 </style>
 <div class="ig-info">
-  <div class="preamble">📐 Instagram 정보형 5장 · 1080 × 1350 · 5장에 캡션·해시태그 내장</div>
+  <div class="preamble">📐 Instagram 정보형 5장 · 1080 × 1350 · 상단 일러스트 + 하단 텍스트</div>
   {% for c in cards %}
   <div class="studio-card" data-card-index="{{ loop.index }}">
     <div class="inner">
-      <div class="top-meta">
-        <div class="badge">{{ c.icon | default('✨') }}</div>
+      <div class="visual-half">
+        <div class="big-icon">{{ c.icon | default('✨') }}</div>
       </div>
-      <div class="body">
+      <div class="text-half">
+        {% if c.role %}<div class="role-label">{{ c.role }}</div>{% endif %}
         <div class="headline">{{ c.headline | default('') }}</div>
-        <div class="subhead">{{ c.subhead | default('') }}</div>
+        {% if c.subhead %}<div class="subhead">{{ c.subhead }}</div>{% endif %}
+        {% if c.body %}<div class="body-text">{{ c.body }}</div>{% endif %}
         {% if c.tags %}
         <div class="tags-row">
           {% for t in c.tags %}<span class="tag">#{{ t }}</span>{% endfor %}
         </div>
         {% endif %}
+        {% if loop.last and cta %}<div class="cta-pill">{{ cta }}</div>{% endif %}
+        {% if c.tagline %}<div class="tagline">{{ c.tagline }}</div>{% endif %}
       </div>
-      <div class="footer">{{ brand }}</div>
     </div>
   </div>
   {% endfor %}
@@ -276,34 +416,69 @@ _TPL_INSTAGRAM_STORY = """
     padding: 28px;
     border-radius: 32px;
   }
-  .ig-story .inner {
+  .ig-story .inner { padding: 0; overflow: hidden; display: flex; flex-direction: column; background: #fefcf8; }
+  .ig-story .visual-half {
+    flex: 0 0 35%;
+    background: linear-gradient(180deg, #fef2f2 0%, #fed7aa 100%);
+    display: flex; align-items: center; justify-content: center;
+    position: relative; overflow: hidden;
+  }
+  .ig-story .visual-half::before {
+    content: ""; position: absolute; inset: 0;
+    background-image: radial-gradient(circle at 50% 50%, transparent 40%, rgba(68,64,60,0.10) 100%);
+    pointer-events: none;
+  }
+  .ig-story .big-icon {
+    font-size: 180px; line-height: 1;
+    filter: drop-shadow(0 10px 20px rgba(68,64,60,0.28));
+    position: relative; z-index: 2;
+  }
+  .ig-story .text-half {
+    flex: 1 1 65%;
     background: #fefcf8;
+    padding: 52px 60px;
+    display: flex; flex-direction: column;
+    text-align: left;
     color: #292524;
   }
-  .ig-story .badge { background: #292524; color: #fefcf8; border-radius: 50%; }
-  .ig-story .role-tag { background: transparent; color: #78716c; font-family: """ + _FONTS_SERIF + """; font-style: italic; }
-  .ig-story .headline {
+  .ig-story .text-half .role-label {
     font-family: """ + _FONTS_SERIF + """;
-    font-weight: 800; font-size: 68px; color: #1c1917; letter-spacing: -0.005em;
+    font-size: 22px; font-style: italic; color: #78716c;
+    margin-bottom: 14px;
   }
-  .ig-story .subhead { color: #57534e; font-size: 28px; }
-  .ig-story .caption-block { background: #f5f5f4; }
-  .ig-story .caption-body { font-family: """ + _FONTS_SERIF + """; }
-  .ig-story .hashtags-row { color: #78716c; }
+  .ig-story .text-half .headline {
+    font-family: """ + _FONTS_SERIF + """;
+    font-weight: 800; font-size: 60px; color: #1c1917;
+    line-height: 1.22; letter-spacing: -0.005em; margin: 0 0 20px;
+  }
+  .ig-story .text-half .subhead {
+    font-size: 26px; color: #57534e; line-height: 1.6; margin-bottom: 18px;
+  }
+  .ig-story .text-half .body-text {
+    font-family: """ + _FONTS_SERIF + """;
+    font-size: 24px; line-height: 1.75; color: #292524;
+    white-space: pre-line; flex: 1;
+  }
+  .ig-story .text-half .tagline {
+    font-family: """ + _FONTS_SERIF + """;
+    margin-top: 16px; font-size: 22px; color: #78716c; font-style: italic;
+  }
 </style>
 <div class="ig-story">
-  <div class="preamble">📐 Instagram 스토리텔링 7장 · 1080 × 1350 · 7장에 캡션 내장</div>
+  <div class="preamble">📐 Instagram 스토리텔링 7장 · 1080 × 1350 · 상단 일러스트 + 하단 텍스트 (명조)</div>
   {% for c in cards %}
   <div class="studio-card" data-card-index="{{ loop.index }}">
     <div class="inner">
-      <div class="top-meta">
-        <div class="badge">{{ c.icon | default('🌅') }}</div>
+      <div class="visual-half">
+        <div class="big-icon">{{ c.icon | default('🌅') }}</div>
       </div>
-      <div class="body">
+      <div class="text-half">
+        {% if c.role %}<div class="role-label">— {{ c.role }} —</div>{% endif %}
         <div class="headline">{{ c.headline | default('') }}</div>
-        <div class="subhead">{{ c.subhead | default('') }}</div>
+        {% if c.subhead %}<div class="subhead">{{ c.subhead }}</div>{% endif %}
+        {% if c.body %}<div class="body-text">{{ c.body }}</div>{% endif %}
+        {% if c.tagline %}<div class="tagline">{{ c.tagline }}</div>{% endif %}
       </div>
-      <div class="footer">— {{ brand }} —</div>
     </div>
   </div>
   {% endfor %}
@@ -315,37 +490,64 @@ _TPL_KAKAO = """
   .kk .studio-card {
     width: 800px; height: 800px;
     background: linear-gradient(160deg, #fde047 0%, #facc15 50%, #eab308 100%);
-    padding: 26px;
+    padding: 22px;
     border-radius: 28px;
   }
-  .kk .inner { padding: 48px 44px 36px; }
-  .kk .badge { background: #fef3c7; color: #78350f; width: 64px; height: 64px; font-size: 32px; border-radius: 18px; }
-  .kk .role-tag { background: #422006; color: #fde047; font-size: 14px; padding: 6px 14px; }
-  .kk .top-meta { margin-top: 28px; }
-  .kk .headline { font-size: 48px; color: #1c1917; margin-bottom: 16px; }
-  .kk .subhead { font-size: 22px; }
-  .kk .cta-pill {
-    background: #422006; color: #fde047;
-    border-radius: 12px;
-    font-size: 20px; padding: 12px 24px;
-    margin-top: 24px;
+  .kk .inner { padding: 0; overflow: hidden; display: flex; flex-direction: column; }
+  .kk .visual-half {
+    flex: 0 0 32%;
+    background: linear-gradient(180deg, #fef9c3 0%, #fde68a 100%);
+    display: flex; align-items: center; justify-content: center;
+    position: relative; overflow: hidden;
   }
-  .kk .footer { font-size: 14px; }
+  .kk .visual-half::before { content: ""; position: absolute; width: 240px; height: 240px;
+    border: 2px dashed rgba(66,32,6,0.24); border-radius: 50%; pointer-events: none; }
+  .kk .big-icon {
+    font-size: 130px; line-height: 1; position: relative; z-index: 2;
+    filter: drop-shadow(0 6px 14px rgba(66,32,6,0.30));
+  }
+  .kk .text-half {
+    flex: 1 1 68%; background: #ffffff;
+    padding: 36px 40px;
+    display: flex; flex-direction: column; text-align: left;
+  }
+  .kk .text-half .role-label {
+    font-size: 16px; font-weight: 800; letter-spacing: 0.14em;
+    color: #b45309; text-transform: uppercase; margin-bottom: 10px;
+  }
+  .kk .text-half .headline {
+    font-family: """ + _FONTS_DISPLAY + """;
+    font-size: 40px; font-weight: 900; color: #1c1917;
+    line-height: 1.22; letter-spacing: -0.02em; margin: 0 0 14px;
+  }
+  .kk .text-half .subhead { font-size: 20px; color: #57534e; line-height: 1.55; margin-bottom: 12px; }
+  .kk .text-half .body-text {
+    font-size: 18px; line-height: 1.7; color: #292524;
+    white-space: pre-line; flex: 1;
+  }
+  .kk .text-half .cta-pill {
+    margin-top: 12px; align-self: flex-start;
+    padding: 10px 22px; background: #422006; color: #fde047;
+    border-radius: 10px; font-size: 18px; font-weight: 900;
+  }
+  .kk .text-half .tagline { margin-top: 10px; font-size: 16px; color: #b45309; font-weight: 700; }
 </style>
 <div class="kk">
-  <div class="preamble">📐 KakaoTalk 카드뉴스 · 800 × 800</div>
+  <div class="preamble">📐 KakaoTalk 카드뉴스 · 800 × 800 · 상단 일러스트 + 하단 텍스트</div>
   {% for c in cards %}
   <div class="studio-card" data-card-index="{{ loop.index }}">
     <div class="inner">
-      <div class="top-meta">
-        <div class="badge">{{ c.icon | default('💬') }}</div>
+      <div class="visual-half">
+        <div class="big-icon">{{ c.icon | default('💬') }}</div>
       </div>
-      <div class="body">
+      <div class="text-half">
+        {% if c.role %}<div class="role-label">{{ c.role }}</div>{% endif %}
         <div class="headline">{{ c.headline | default('') }}</div>
-        <div class="subhead">{{ c.subhead | default('') }}</div>
+        {% if c.subhead %}<div class="subhead">{{ c.subhead }}</div>{% endif %}
+        {% if c.body %}<div class="body-text">{{ c.body }}</div>{% endif %}
         {% if c.button %}<div class="cta-pill">{{ c.button }}</div>{% endif %}
+        {% if c.tagline %}<div class="tagline">{{ c.tagline }}</div>{% endif %}
       </div>
-      <div class="footer">{{ brand }}</div>
     </div>
   </div>
   {% endfor %}

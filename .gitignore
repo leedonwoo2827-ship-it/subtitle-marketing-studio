@@ -11,8 +11,6 @@ data/projects/
 *.egg-info/
 .claude/settings.local.json
 
-# Ubion 사내 마이그레이션 키트 — 실제 API 키 포함, 외부 공개 금지
-_context/litellm_kit/
-_context/Ubion_liteLLM_Migration_Kit.zip
-_context/260527-first (*)/
+# _context/ 전체 — 사내 자료·샘플·키 포함, GitHub 업로드 금지
+_context/
 
