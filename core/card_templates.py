@@ -647,20 +647,78 @@ def _fix_llm_json(payload: str) -> str:
     return fixed
 
 
+def _recover_truncated_card_json(payload: str) -> str | None:
+    """If the LLM ran out of tokens mid-card, salvage the completed cards.
+
+    Tracks brace/bracket depth + string state. Records the position right
+    after each card object closes (depth 3 → 2 inside `cards: [ ... ]`).
+    If parsing fails, truncate at the last fully-closed card and append
+    `]}` to close the cards array and the root object.
+    """
+    depth = 0
+    in_str = False
+    escape = False
+    last_card_end = -1
+    for i, ch in enumerate(payload):
+        if escape:
+            escape = False
+            continue
+        if ch == "\\":
+            escape = True
+            continue
+        if ch == '"':
+            in_str = not in_str
+            continue
+        if in_str:
+            continue
+        if ch in "{[":
+            depth += 1
+        elif ch in "}]":
+            was = depth
+            depth -= 1
+            if ch == "}" and was == 3:
+                # Just closed a card object (root → cards array → card)
+                last_card_end = i + 1
+    if last_card_end < 0:
+        return None
+    # Trim trailing whitespace/comma after the last card, close array+root.
+    truncated = payload[:last_card_end].rstrip().rstrip(",").rstrip()
+    return truncated + "\n]\n}"
+
+
 def parse_card_json(text: str) -> dict:
-    """Pull JSON from LLM output (handles ```json … ``` fences, prose,
-    smart quotes, literal newlines in strings, trailing commas)."""
+    """Pull JSON from LLM output. Layers of recovery:
+      1. Strict json.loads on the extracted payload
+      2. LLM-quirk fixer (smart quotes, literal newlines, trailing commas)
+      3. Truncation recovery — close cards array at last complete card
+    """
     m = re.search(r"```(?:json)?\s*([\s\S]+?)```", text)
     payload = m.group(1).strip() if m else text.strip()
     start = payload.find("{")
     end = payload.rfind("}")
     if start >= 0 and end > start:
         payload = payload[start : end + 1]
-    # Try strict first; if that fails, apply the LLM-quirk fixer and retry.
+
+    # Layer 1: strict
     try:
         return json.loads(payload)
     except json.JSONDecodeError:
-        return json.loads(_fix_llm_json(payload))
+        pass
+
+    # Layer 2: LLM-quirk fixer (smart quotes / unescaped newlines / trailing commas)
+    fixed = _fix_llm_json(payload)
+    try:
+        return json.loads(fixed)
+    except json.JSONDecodeError as e_fixed:
+        # Layer 3: truncation recovery
+        recovered = _recover_truncated_card_json(fixed)
+        if recovered is not None:
+            try:
+                return json.loads(recovered)
+            except json.JSONDecodeError:
+                pass
+        # All layers failed — raise the most informative error
+        raise e_fixed
 
 
 _CHANNEL_LABEL = {

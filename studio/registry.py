@@ -126,6 +126,7 @@ class ThreadsQuickStudio(StudioBase):
     description = "PNG 3장 (1080×1350) · Jinja2 템플릿 + Playwright"
     html_renderer = "cards_threads_quick"
     png_renderer = "cards_threads_quick"
+    max_tokens = 10240  # 3 cards × 2~3 blocks × 2~3 sentences + tagline
 
 
 class ThreadsInsightStudio(StudioBase):
@@ -137,6 +138,7 @@ class ThreadsInsightStudio(StudioBase):
     description = "PNG 5장 (1080×1350) · 한 주제 deep-dive"
     html_renderer = "cards_threads_insight"
     png_renderer = "cards_threads_insight"
+    max_tokens = 14336  # 5 cards × 2~3 blocks (+ stat + tagline) — JSON overhead
 
 
 class InstagramInfoStudio(StudioBase):
@@ -148,6 +150,7 @@ class InstagramInfoStudio(StudioBase):
     description = "PNG 5장 (1080×1350) · 캡션 5장 카드 내 내장"
     html_renderer = "cards_instagram_info"
     png_renderer = "cards_instagram_info"
+    max_tokens = 14336  # 5 cards × 2~3 blocks + tags + caption + hashtags
 
 
 class InstagramStoryStudio(StudioBase):
@@ -159,6 +162,7 @@ class InstagramStoryStudio(StudioBase):
     description = "PNG 7장 (1080×1350) · 서사·에피소드"
     html_renderer = "cards_instagram_story"
     png_renderer = "cards_instagram_story"
+    max_tokens = 16384  # 7 cards × 2 blocks + caption — most output of all card studios
 
 
 class KakaoCardsStudio(StudioBase):
@@ -170,6 +174,7 @@ class KakaoCardsStudio(StudioBase):
     description = "PNG 1~3장 (800×800) · 노란 외곽 + 흰 내부"
     html_renderer = "cards_kakao"
     png_renderer = "cards_kakao"
+    max_tokens = 8192  # 1~3 cards, short — default budget plenty
 
 
 REGISTRY = [
