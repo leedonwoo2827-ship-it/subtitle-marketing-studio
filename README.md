@@ -52,5 +52,6 @@
 ## 더 보기
 
 - [docs/setup.md](docs/setup.md) — macOS/Linux 설치, API 설정 상세, 폴더 구조, 모델 변경
+- [docs/cost.md](docs/cost.md) — 비용 안내 (자막 1개 ≈ 1,350원), 환율 갱신 방법
 - [docs/output-policy.md](docs/output-policy.md) — 자막 원문 노출 금지 정책
 - [knowledge/channel-style-research.md](knowledge/channel-style-research.md) — 채널별 톤·길이·해시태그 가이드 (프롬프트 주입용)
