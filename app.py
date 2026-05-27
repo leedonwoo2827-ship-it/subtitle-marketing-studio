@@ -157,37 +157,13 @@ def render_top_api_bar() -> None:
     else:
         badge = "⚠️ API 키 미설정 — 펼쳐서 입력하세요"
 
-    with st.expander(f"⚙ API 설정 — {badge} · 텍스트 `{settings_mod.FIXED_MODEL}` · 이미지 `{s.image_model}`", expanded=not configured):
-        st.markdown("**📝 텍스트 LLM** (블로그·보도자료)")
+    with st.expander(f"⚙ API 설정 — {badge} · 모델 `{settings_mod.FIXED_MODEL}`", expanded=not configured):
         c1, c2 = st.columns([2, 3])
         with c1:
             s.base_url = st.text_input("API URL", value=s.base_url, help="Ubion LiteLLM 프록시 주소")
         with c2:
             s.api_key = st.text_input("API 키", value=s.api_key, type="password", help="사내 대시보드(/ui/)에서 발급한 virtual key")
-
-        st.markdown("**🖼 이미지 모델** (카드뉴스 5종 · 비워두면 위 API URL/키 재사용)")
-        i1, i2, i3 = st.columns([2, 2, 2])
-        with i1:
-            s.image_base_url = st.text_input(
-                "이미지 API URL",
-                value=s.image_base_url,
-                placeholder="비워두면 위 URL 재사용",
-                help="나중에 로컬 이미지 모델 붙일 때 여기에 로컬 URL 입력",
-            )
-        with i2:
-            s.image_api_key = st.text_input(
-                "이미지 API 키",
-                value=s.image_api_key,
-                type="password",
-                placeholder="비워두면 위 키 재사용",
-            )
-        with i3:
-            s.image_model = st.text_input(
-                "이미지 모델",
-                value=s.image_model,
-                placeholder=settings_mod.IMAGE_MODEL,
-                help="Gemini Nano Banana / gpt-image-2 / 향후 로컬 모델 이름",
-            )
+        st.caption("카드뉴스는 LLM이 만든 JSON을 Jinja2 + Playwright로 로컬에서 PNG 캡처합니다 (추가 API 비용 없음).")
 
         with st.expander("고급 설정", expanded=False):
             c3, c4, c5 = st.columns(3)
@@ -230,25 +206,22 @@ def render_studio_panel() -> None:
             missing.append("**1단계** — 좌측 사이드바(`📂 프로젝트`) → `(새 프로젝트)` 선택 → 이름 입력 → `➕ 만들기`")
         if not has_subtitle:
             missing.append("**2단계** — 우측 `🎬 자막 소스` 패널에서 .srt/.vtt/.ass/.txt 업로드")
-        missing.append("**3단계** — 여기서 `▶ 텍스트 10개 일괄 실행` (카드뉴스는 개별 ▶ 클릭)")
+        missing.append("**3단계** — 여기서 `▶ 전체 15개 실행`")
         st.info("\n\n".join(missing))
         return
 
-    # Bulk = text-only (blogs + press release). Card studios run via
-    # Jinja2 + Playwright (no per-card API charge — local browser render).
-    text_studios = [s for s in list_studios() if not s.png_renderer]
-    n_text = len(text_studios)
+    # Bulk = all 15 studios. Cards use Jinja2 + Playwright locally → no
+    # API cost beyond the text-LLM call that produces the JSON.
+    n_total = len(list_studios())
     st.caption(
-        f"💰 일괄 실행 = 텍스트 {n_text}개만 (블로그 + 보도자료) · "
-        f"카드뉴스 5종은 HTML+Playwright 캡처(추가 API 비용 없음). 카드별 ▶ 재실행으로 개별 생성."
+        f"💰 전체 {n_total}개 일괄 실행 · 카드뉴스 PNG는 Playwright 로컬 캡처(추가 비용 없음)."
     )
 
     col_a, col_b, col_c = st.columns([2, 0.8, 0.8])
     with col_a:
         if st.button(
-            f"▶ 텍스트 {n_text}개 일괄 실행",
+            f"▶ 전체 {n_total}개 실행",
             type="primary", use_container_width=True, disabled=not ready,
-            help="블로그 9개 + 보도자료 1개. 카드뉴스는 비용 발생이라 개별 실행.",
         ):
             _run_bulk()
     with col_b:
@@ -311,11 +284,10 @@ def _run_bulk() -> None:
         st.error("프로젝트와 자막을 먼저 준비하세요.")
         return
 
-    # Bulk = text-only (image cards run individually via local Playwright)
-    text_keys = [s.key for s in list_studios() if not s.png_renderer]
-    with st.spinner(f"텍스트 {len(text_keys)}개 실행 중… (모델: `{ctx.llm.model}`, 병렬 {ctx.parallelism})"):
+    keys_all = [s.key for s in list_studios()]
+    with st.spinner(f"{len(keys_all)}개 스튜디오 실행 중… (모델: `{ctx.llm.model}`, 병렬 {ctx.parallelism})"):
         t0 = time.time()
-        report = run_all(ctx, keys=text_keys)
+        report = run_all(ctx, keys=keys_all)
         elapsed = time.time() - t0
 
     st.session_state.results.update(report.results)
@@ -323,9 +295,9 @@ def _run_bulk() -> None:
     done = [r for r in report.results.values() if r.status == "done"]
     errs = [r for r in report.results.values() if r.status == "error"]
 
-    n_total = len(text_keys)
+    n_total = len(keys_all)
     if done and not errs:
-        st.success(f"✅ 텍스트 {n_total}개 모두 완료 · {elapsed:.1f}s")
+        st.success(f"✅ {n_total}개 모두 완료 · {elapsed:.1f}s")
     elif done:
         st.warning(f"⚠️ {len(done)}/{n_total} 완료, {len(errs)}개 실패 · {elapsed:.1f}s")
     else:

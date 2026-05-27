@@ -6,8 +6,8 @@ Section grouping (UI):
 """
 from studio._base import StudioBase
 
-CARD = "🖼 카드뉴스 (개별 실행 · 이미지 비용 발생)"
-BLOG = "📝 텍스트 (▶ 일괄 실행 대상)"
+CARD = "🖼 카드뉴스 (Jinja2 + Playwright)"
+BLOG = "📝 블로그·보도자료 (텍스트)"
 
 
 # ─────────────────── 블로그 9종 (1~9) ───────────────────
