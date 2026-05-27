@@ -419,32 +419,42 @@ def render_output_panel() -> None:
     studio_obj = get_studio(r.key)
     has_png = bool(r.png_paths)
     has_docx = bool(r.docx_path)
+    is_card = bool(studio_obj.png_renderer)
+    raw_label = "🔧 JSON 원본" if is_card else "🔧 Markdown 원본"
+    raw_lang = "json" if is_card else "markdown"
 
-    tabs = ["📝 미리보기", "🎨 HTML 미리보기", "🔧 Markdown 원본"]
-    if has_png:
-        tabs.insert(1, "🖼 PNG 카드")
-    tab_objs = st.tabs(tabs)
-    ti = 0
-    with tab_objs[ti]:
-        st.markdown(r.output)
-    ti += 1
-    if has_png:
-        with tab_objs[ti]:
-            cols = st.columns(min(len(r.png_paths), 5))
-            for i, p in enumerate(r.png_paths):
-                with cols[i % len(cols)]:
-                    st.image(str(p), caption=f"card_{i + 1}.png", use_container_width=True)
-        ti += 1
-    with tab_objs[ti]:
-        if r.html:
-            is_card = studio_obj.html_renderer.startswith("cards_")
-            height = 1800 if is_card else 900
-            st.components.v1.html(r.html, height=height, scrolling=True)
-        else:
-            st.caption("HTML 미리보기 없음. 재실행하면 생성됩니다.")
-    ti += 1
-    with tab_objs[ti]:
-        st.code(r.output, language="markdown")
+    if is_card:
+        # Card studio: LLM output is JSON, so markdown preview is noise.
+        # PNG goes first since that's the channel-ready artefact.
+        tab_names = ["🖼 PNG 카드", "🎨 HTML 미리보기", raw_label]
+        t_png, t_html, t_raw = st.tabs(tab_names)
+        with t_png:
+            if has_png:
+                cols = st.columns(min(len(r.png_paths), 5))
+                for i, p in enumerate(r.png_paths):
+                    with cols[i % len(cols)]:
+                        st.image(str(p), caption=f"card_{i + 1}.png", use_container_width=True)
+            else:
+                st.caption("PNG 카드 없음. 재실행하면 생성됩니다.")
+        with t_html:
+            if r.html:
+                st.components.v1.html(r.html, height=1800, scrolling=True)
+            else:
+                st.caption("HTML 미리보기 없음.")
+        with t_raw:
+            st.code(r.output, language=raw_lang)
+    else:
+        # Text studio (blog / press release): markdown preview is the main view.
+        t_view, t_html, t_raw = st.tabs(["📝 미리보기", "🎨 HTML 미리보기", raw_label])
+        with t_view:
+            st.markdown(r.output)
+        with t_html:
+            if r.html:
+                st.components.v1.html(r.html, height=900, scrolling=True)
+            else:
+                st.caption("HTML 미리보기 없음.")
+        with t_raw:
+            st.code(r.output, language=raw_lang)
 
     if has_png:
         st.caption(f"🖼 Playwright HTML 캡처 · 카드 {len(r.png_paths)}장 · 로컬 렌더 (API 비용 없음)")
