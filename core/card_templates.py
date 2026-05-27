@@ -608,3 +608,102 @@ def parse_card_json(text: str) -> dict:
     if start >= 0 and end > start:
         payload = payload[start : end + 1]
     return json.loads(payload)
+
+
+_CHANNEL_LABEL = {
+    "cards_threads_quick":   "Threads",
+    "cards_threads_insight": "Threads (인사이트)",
+    "cards_instagram_info":  "Instagram",
+    "cards_instagram_story": "Instagram (스토리텔링)",
+    "cards_kakao":           "KakaoTalk",
+}
+
+
+def format_md_draft(channel_key: str, data: dict, *, title: str) -> str:
+    """Build a human-readable Markdown draft from the card JSON.
+
+    First section is the channel-ready SNS body (caption + hashtags) that the
+    user copies into the Threads / Instagram / KakaoTalk post text field.
+    Second section is the per-card content for reference (also useful when
+    only PNG cards are exported).
+    """
+    cards = data.get("cards") or []
+    caption = (data.get("caption") or "").strip()
+    hashtags = (data.get("hashtags") or "").strip()
+    button = (data.get("button") or "").strip()
+    channel_name = _CHANNEL_LABEL.get(channel_key, "SNS")
+
+    out: list[str] = [f"# {title}", ""]
+
+    out.append(f"## 📝 {channel_name} 본문 초안")
+    out.append("")
+    out.append("> 아래 텍스트를 그대로 채널의 본문 입력란에 붙여넣기.")
+    out.append("")
+
+    if caption:
+        out.append(caption.strip())
+        out.append("")
+    else:
+        # No explicit caption (e.g., Threads). Synthesise from card 1.
+        if cards:
+            c0 = cards[0]
+            if c0.get("headline"):
+                out.append(f"**{c0['headline']}**")
+                out.append("")
+            for b in c0.get("blocks") or []:
+                if b.get("body"):
+                    out.append(b["body"].strip())
+                    out.append("")
+            if c0.get("tagline"):
+                out.append(f"_{c0['tagline']}_")
+                out.append("")
+
+    if hashtags:
+        out.append(hashtags)
+        out.append("")
+
+    if button:
+        out.append(f"**버튼 라벨**: `{button}`")
+        out.append("")
+
+    out.append("---")
+    out.append("")
+    out.append(f"## 🖼 카드별 내용 ({len(cards)}장)")
+    out.append("")
+
+    for i, c in enumerate(cards, start=1):
+        icon = (c.get("icon") or "").strip()
+        head = (c.get("headline") or "").strip()
+        header_text = f"카드 {i}"
+        if icon:
+            header_text += f" · {icon}"
+        if i == 1 and head:
+            header_text += f" · {head}"
+        out.append(f"### {header_text}")
+        out.append("")
+
+        for b in c.get("blocks") or []:
+            sub = (b.get("subhead") or "").strip()
+            body = (b.get("body") or "").strip()
+            if sub:
+                out.append(f"**{sub}**")
+            if body:
+                out.append(body)
+            if sub or body:
+                out.append("")
+
+        stat = c.get("stat") or {}
+        if stat.get("value") or stat.get("label"):
+            out.append(f"📊 **{stat.get('value', '').strip()}** — {stat.get('label', '').strip()}")
+            out.append("")
+
+        tags = c.get("tags") or []
+        if tags:
+            out.append(" ".join(f"#{t}" for t in tags))
+            out.append("")
+
+        if c.get("tagline"):
+            out.append(f"> {c['tagline'].strip()}")
+            out.append("")
+
+    return "\n".join(out).rstrip() + "\n"

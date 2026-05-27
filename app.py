@@ -74,9 +74,12 @@ def _load_existing_results() -> None:
             cards_dir = folder / "cards"
             png_paths = sorted(cards_dir.glob("card_*.png")) if cards_dir.exists() else []
             docx_path = folder / "output.docx"
+            json_path = folder / "output.json"
+            json_raw = json_path.read_text(encoding="utf-8") if json_path.exists() else ""
             st.session_state.results[s.key] = StudioResult(
                 key=s.key, title=s.title, status="done",
                 output=out.read_text(encoding="utf-8"), output_path=out,
+                json_raw=json_raw,
                 html=html_text, html_path=html_path if html_path.exists() else None,
                 png_paths=png_paths,
                 docx_path=docx_path if docx_path.exists() else None,
@@ -424,10 +427,13 @@ def render_output_panel() -> None:
     raw_lang = "json" if is_card else "markdown"
 
     if is_card:
-        # Card studio: LLM output is JSON, so markdown preview is noise.
-        # PNG goes first since that's the channel-ready artefact.
-        tab_names = ["🖼 PNG 카드", "🎨 HTML 미리보기", raw_label]
-        t_png, t_html, t_raw = st.tabs(tab_names)
+        # Card studio: output.md is the channel-ready DRAFT (caption +
+        # per-card content); JSON tab shows the raw LLM JSON for debugging.
+        tab_names = ["📝 SNS 본문 초안", "🖼 PNG 카드", "🎨 HTML 미리보기", "🔧 JSON 원본"]
+        t_md, t_png, t_html, t_raw = st.tabs(tab_names)
+        with t_md:
+            st.caption("아래 텍스트를 그대로 채널에 붙여넣기. 카드별 본문도 참고용으로 정리돼 있습니다.")
+            st.markdown(r.output)
         with t_png:
             if has_png:
                 cols = st.columns(min(len(r.png_paths), 5))
@@ -442,7 +448,7 @@ def render_output_panel() -> None:
             else:
                 st.caption("HTML 미리보기 없음.")
         with t_raw:
-            st.code(r.output, language=raw_lang)
+            st.code(r.json_raw or r.output, language="json")
     else:
         # Text studio (blog / press release): markdown preview is the main view.
         t_view, t_html, t_raw = st.tabs(["📝 미리보기", "🎨 HTML 미리보기", raw_label])

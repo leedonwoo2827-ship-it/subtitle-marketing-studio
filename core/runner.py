@@ -12,7 +12,7 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Iterable
 
-from core import docx_render, html_render, image_render, png_render
+from core import card_templates, docx_render, html_render, image_render, png_render
 from studio import get_studio, list_studios
 from studio._base import StudioContext
 
@@ -22,7 +22,8 @@ class StudioResult:
     key: str
     title: str
     status: str  # "pending" | "running" | "done" | "error"
-    output: str = ""
+    output: str = ""              # what we show in 미리보기 (MD draft for cards, MD body for text)
+    json_raw: str = ""            # raw JSON returned by LLM (card studios only)
     error: str = ""
     output_path: Path | None = None
     html_path: Path | None = None
@@ -65,9 +66,28 @@ def _execute_one(key: str, ctx: StudioContext) -> StudioResult:
             legacy.rename(out_dir)
         out_dir.mkdir(parents=True, exist_ok=True)
 
+        # For card studios the LLM returns JSON. Persist that raw JSON to
+        # output.json for re-rendering / debugging, and write a
+        # human-readable Markdown DRAFT to output.md so the user can copy
+        # the channel-ready body straight into Threads / Instagram / Kakao.
+        is_card = studio.html_renderer.startswith("cards_")
+        md_text = text
+        if is_card:
+            try:
+                data = card_templates.parse_card_json(text)
+                md_text = card_templates.format_md_draft(
+                    studio.html_renderer, data, title=studio.title,
+                )
+                (out_dir / "output.json").write_text(text, encoding="utf-8")
+                res.json_raw = text
+            except Exception:
+                # JSON parse failed — leave md_text as raw LLM text so the
+                # user can see what went wrong in the 미리보기 tab.
+                pass
+
         out_path = out_dir / "output.md"
-        out_path.write_text(text, encoding="utf-8")
-        res.output = text
+        out_path.write_text(md_text, encoding="utf-8")
+        res.output = md_text
         res.output_path = out_path
 
         html = html_render.render(
