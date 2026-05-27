@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import io
+import shutil
 import time
 import uuid
 import zipfile
@@ -112,6 +113,24 @@ def render_sidebar() -> None:
 
         if st.session_state.project_name:
             st.caption(f"📁 `data/projects/{st.session_state.project_name}/`")
+
+            with st.expander("🗑 프로젝트 삭제", expanded=False):
+                st.caption(f"`{st.session_state.project_name}` 프로젝트 폴더(자막·17개 산출물 전체)를 디스크에서 삭제합니다.")
+                confirm = st.checkbox("네, 정말 삭제합니다", key=f"del_confirm_{st.session_state.project_name}")
+                if st.button("🗑 삭제 실행", disabled=not confirm, use_container_width=True, type="secondary"):
+                    pd = PROJECTS_DIR / st.session_state.project_name
+                    try:
+                        if pd.exists():
+                            shutil.rmtree(pd)
+                        st.session_state.project_name = ""
+                        st.session_state.results = {}
+                        st.session_state.subtitle_result = None
+                        st.session_state.selected_key = None
+                        st.session_state.pop("_last_upload_key", None)
+                        st.toast("프로젝트 삭제 완료", icon="🗑")
+                        st.rerun()
+                    except Exception as e:
+                        st.error(f"삭제 실패: {type(e).__name__}: {e}")
 
 
 # ─────────────────────────── top bar (API 설정) ───────────────────────────
