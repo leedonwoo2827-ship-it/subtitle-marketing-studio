@@ -16,6 +16,7 @@ from __future__ import annotations
 
 import base64
 import io
+import re
 from dataclasses import dataclass, field
 from pathlib import Path
 
@@ -107,6 +108,65 @@ Layout requirements:
 No logos beyond the text. No watermarks. No frames around the card. Korean text must be exact — do not paraphrase, translate, or omit characters. Image should look like a professionally designed infographic card, not a stock photo."""
 
 
+def _get(obj, key, default=None):
+    """Access either as dict[key] or attribute. LiteLLM proxy sometimes
+    returns dicts where the OpenAI SDK would return Pydantic objects."""
+    if obj is None:
+        return default
+    if isinstance(obj, dict):
+        return obj.get(key, default)
+    return getattr(obj, key, default)
+
+
+def _extract_image_data_url(msg) -> tuple[str, str]:
+    """Extract base64 data URL from a chat-completion message.
+
+    Tries multiple shapes Gemini/LiteLLM might return:
+    - message.images[0].image_url.url            (OpenAI SDK shape)
+    - message.images[0]['image_url']['url']      (dict shape)
+    - message.content with embedded data URL     (some routings)
+
+    Returns (data_url, description). On failure description is the error.
+    """
+    images = _get(msg, "images")
+    if images:
+        img0 = images[0]
+        iu = _get(img0, "image_url")
+        # iu might be a string, dict, or object
+        if isinstance(iu, str) and iu.startswith("data:"):
+            return iu, ""
+        url = _get(iu, "url")
+        if isinstance(url, str) and url:
+            return url, ""
+        # Some providers put the data directly on the image object
+        url = _get(img0, "url")
+        if isinstance(url, str) and url:
+            return url, ""
+
+    # Fallback: regex-search the content
+    content = _get(msg, "content", "") or ""
+    if isinstance(content, str):
+        m = re.search(r"data:image/[a-z]+;base64,[A-Za-z0-9+/=]+", content)
+        if m:
+            return m.group(0), ""
+
+    # Diagnostics for the warning bar
+    keys_hint = ""
+    try:
+        if images:
+            sample = images[0]
+            if isinstance(sample, dict):
+                keys_hint = f" image dict keys={list(sample.keys())}"
+            else:
+                keys_hint = f" image attrs={[a for a in dir(sample) if not a.startswith('_')][:8]}"
+        else:
+            top = _get(msg, "model_dump", None)
+            keys_hint = " (no .images field)"
+    except Exception:
+        pass
+    return "", f"could not locate image data URL in response{keys_hint}"
+
+
 def _generate_one(prompt: str, *, base_url: str, api_key: str) -> tuple[bytes | None, str]:
     """Call Nano Banana via the Ubion LiteLLM proxy. Returns (png_bytes, error)."""
     try:
@@ -123,10 +183,9 @@ def _generate_one(prompt: str, *, base_url: str, api_key: str) -> tuple[bytes | 
             modalities=["image", "text"],
         )
         msg = resp.choices[0].message
-        images = getattr(msg, "images", None)
-        if not images:
-            return None, "model returned no images"
-        data_url = images[0].image_url.url
+        data_url, err = _extract_image_data_url(msg)
+        if not data_url:
+            return None, err
         b64 = data_url.split(",", 1)[1] if "," in data_url else data_url
         raw = base64.b64decode(b64)
         return raw, ""
