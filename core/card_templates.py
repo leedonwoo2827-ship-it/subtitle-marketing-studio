@@ -599,15 +599,68 @@ def _wrap(title: str, body_html: str) -> str:
     )
 
 
+def _fix_llm_json(payload: str) -> str:
+    """Repair common LLM-JSON glitches before json.loads.
+
+    The Korean card prompts produce JSON-like text where the model
+    sometimes:
+      - writes literal newlines/tabs inside string values (illegal JSON)
+      - uses smart quotes `“ ” ‘ ’` instead of ASCII `" '`
+      - leaves a trailing comma before `}` or `]`
+    """
+    # 1) Smart quotes → ASCII
+    payload = (payload
+               .replace("“", '"').replace("”", '"')
+               .replace("‘", "'").replace("’", "'"))
+    # 2) Escape literal newlines / CR / tabs inside string literals.
+    #    Walk the text tracking string state.
+    out: list[str] = []
+    in_str = False
+    escape = False
+    for ch in payload:
+        if escape:
+            out.append(ch)
+            escape = False
+            continue
+        if ch == "\\":
+            out.append(ch)
+            escape = True
+            continue
+        if ch == '"':
+            in_str = not in_str
+            out.append(ch)
+            continue
+        if in_str:
+            if ch == "\n":
+                out.append("\\n")
+                continue
+            if ch == "\r":
+                out.append("\\r")
+                continue
+            if ch == "\t":
+                out.append("\\t")
+                continue
+        out.append(ch)
+    fixed = "".join(out)
+    # 3) Trailing commas before `}` or `]`
+    fixed = re.sub(r",(\s*[}\]])", r"\1", fixed)
+    return fixed
+
+
 def parse_card_json(text: str) -> dict:
-    """Pull JSON from LLM output (handles ```json … ``` fences and prose)."""
+    """Pull JSON from LLM output (handles ```json … ``` fences, prose,
+    smart quotes, literal newlines in strings, trailing commas)."""
     m = re.search(r"```(?:json)?\s*([\s\S]+?)```", text)
     payload = m.group(1).strip() if m else text.strip()
     start = payload.find("{")
     end = payload.rfind("}")
     if start >= 0 and end > start:
         payload = payload[start : end + 1]
-    return json.loads(payload)
+    # Try strict first; if that fails, apply the LLM-quirk fixer and retry.
+    try:
+        return json.loads(payload)
+    except json.JSONDecodeError:
+        return json.loads(_fix_llm_json(payload))
 
 
 _CHANNEL_LABEL = {
