@@ -241,14 +241,23 @@ def render_studio_panel() -> None:
                 r = st.session_state.results.get(s.key)
                 icon = STATUS_ICON.get(r.status if r else "pending", "⚪")
                 has_done = bool(r and r.status == "done")
-                row = st.columns([0.4, 4, 0.9, 0.9, 0.5])
+                # Icon-only buttons + hover tooltips → no Korean text wrapping
+                # at any panel width.
+                row = st.columns([0.5, 5, 0.7, 0.7, 0.7])
                 row[0].markdown(f"### {icon}")
-                row[1].markdown(f"**{s.title}**  \n<span style='color:#888;font-size:0.85em'>{s.description}</span>", unsafe_allow_html=True)
-                if row[2].button("열기", key=f"open_{s.key}", use_container_width=True, disabled=not has_done):
+                row[1].markdown(
+                    f"**{s.title}**  \n"
+                    f"<span style='color:#888;font-size:0.85em'>{s.description}</span>",
+                    unsafe_allow_html=True,
+                )
+                if row[2].button("📄", key=f"open_{s.key}", use_container_width=True,
+                                 disabled=not has_done, help="열기"):
                     st.session_state.selected_key = s.key
-                if row[3].button("재실행", key=f"rerun_{s.key}", use_container_width=True):
+                if row[3].button("🔄", key=f"rerun_{s.key}", use_container_width=True,
+                                 help="재실행"):
                     _run_single(s.key)
-                if row[4].button("🗑", key=f"del_{s.key}", use_container_width=True, disabled=not r, help="이 스튜디오 산출물 비우기"):
+                if row[4].button("🗑", key=f"del_{s.key}", use_container_width=True,
+                                 disabled=not r, help="이 스튜디오 산출물 비우기"):
                     _delete_one_result(s.key)
                     st.rerun()
                 if r and r.status == "error":
