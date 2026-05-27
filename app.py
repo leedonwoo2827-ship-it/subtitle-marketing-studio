@@ -220,22 +220,31 @@ def _run_bulk() -> None:
     if not ctx:
         st.error("프로젝트와 자막을 먼저 준비하세요.")
         return
-    progress = st.progress(0.0, text="시작 중…")
-    total = len(list_studios())
-    done = {"n": 0}
 
-    def _cb(r: StudioResult) -> None:
-        if r.status in ("done", "error"):
-            done["n"] += 1
-            progress.progress(done["n"] / total, text=f"{r.title} {STATUS_ICON[r.status]}")
-        st.session_state.results[r.key] = r
+    with st.spinner(f"17개 스튜디오 실행 중… (모델: `{ctx.llm.model}`, 병렬 {ctx.parallelism})"):
+        t0 = time.time()
+        report = run_all(ctx)
+        elapsed = time.time() - t0
 
-    t0 = time.time()
-    report = run_all(ctx, on_progress=_cb)
     st.session_state.results.update(report.results)
-    elapsed = time.time() - t0
-    progress.progress(1.0, text=f"완료 ({elapsed:.1f}s)")
-    st.toast(f"17개 스튜디오 실행 완료 — {elapsed:.1f}s", icon="✅")
+
+    done = [r for r in report.results.values() if r.status == "done"]
+    errs = [r for r in report.results.values() if r.status == "error"]
+
+    if done and not errs:
+        st.success(f"✅ 17개 모두 완료 · {elapsed:.1f}s")
+    elif done:
+        st.warning(f"⚠️ {len(done)}/17 완료, {len(errs)}개 실패 · {elapsed:.1f}s")
+    else:
+        st.error(f"❌ 모든 스튜디오 실패 · {elapsed:.1f}s — API 키·URL·연결을 확인하세요.")
+
+    if errs:
+        with st.expander(f"❌ 실패 상세 ({len(errs)}개)", expanded=True):
+            for r in errs[:5]:  # show first 5; rest are similar
+                st.markdown(f"**{r.title}**")
+                st.code(r.error, language="text")
+            if len(errs) > 5:
+                st.caption(f"… 외 {len(errs) - 5}개 (모두 비슷한 원인일 가능성)")
 
 
 def _run_single(key: str) -> None:

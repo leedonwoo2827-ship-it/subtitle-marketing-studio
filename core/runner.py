@@ -1,4 +1,9 @@
-"""Orchestrates studio execution: bulk parallel + single re-run."""
+"""Orchestrates studio execution: bulk parallel + single re-run.
+
+Workers run in plain threads and DO NOT touch Streamlit (no UI calls, no
+session_state writes). All UI updates happen on the main thread using the
+returned RunReport.
+"""
 from __future__ import annotations
 
 import threading
@@ -6,7 +11,7 @@ import traceback
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Callable, Iterable
+from typing import Iterable
 
 from studio import get_studio, list_studios
 from studio._base import StudioContext
@@ -40,7 +45,7 @@ def _execute_one(key: str, ctx: StudioContext) -> StudioResult:
         res.output_path = out_path
         res.status = "done"
     except Exception as e:
-        res.error = f"{type(e).__name__}: {e}\n{traceback.format_exc(limit=3)}"
+        res.error = f"{type(e).__name__}: {e}\n{traceback.format_exc(limit=4)}"
         res.status = "error"
     return res
 
@@ -48,7 +53,6 @@ def _execute_one(key: str, ctx: StudioContext) -> StudioResult:
 def run_all(
     ctx: StudioContext,
     *,
-    on_progress: Callable[[StudioResult], None] | None = None,
     keys: Iterable[str] | None = None,
 ) -> RunReport:
     """Run all (or a subset of) studios. Local provider → serial; remote → parallel."""
@@ -58,13 +62,17 @@ def run_all(
     lock = threading.Lock()
 
     def _wrap(k: str) -> StudioResult:
-        if on_progress:
-            on_progress(StudioResult(key=k, title=get_studio(k).title, status="running"))
-        r = _execute_one(k, ctx)
+        try:
+            r = _execute_one(k, ctx)
+        except Exception as e:
+            r = StudioResult(
+                key=k,
+                title=get_studio(k).title if k else "?",
+                status="error",
+                error=f"runner: {type(e).__name__}: {e}\n{traceback.format_exc(limit=4)}",
+            )
         with lock:
             report.results[k] = r
-        if on_progress:
-            on_progress(r)
         return r
 
     if workers == 1:
@@ -73,8 +81,31 @@ def run_all(
     else:
         with ThreadPoolExecutor(max_workers=workers) as ex:
             futures = {ex.submit(_wrap, k): k for k in selected}
-            for _ in as_completed(futures):
-                pass
+            for f in as_completed(futures):
+                try:
+                    f.result()  # surface any uncaught error
+                except Exception as e:
+                    k = futures[f]
+                    with lock:
+                        report.results.setdefault(
+                            k,
+                            StudioResult(
+                                key=k,
+                                title=get_studio(k).title,
+                                status="error",
+                                error=f"future: {type(e).__name__}: {e}",
+                            ),
+                        )
+
+    # Ensure every selected key has a result (even if worker died silently)
+    for k in selected:
+        report.results.setdefault(
+            k,
+            StudioResult(
+                key=k, title=get_studio(k).title, status="error",
+                error="worker returned no result (silently swallowed)",
+            ),
+        )
     return report
 
 
