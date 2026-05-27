@@ -68,35 +68,14 @@ body {
   display: flex; flex-direction: column;
   position: relative; overflow: hidden;
 }
-.studio-card .channel-strip {
-  position: absolute; top: 0; left: 0; right: 0;
-  display: flex; align-items: center; justify-content: space-between;
-  padding: 18px 28px;
-  font-size: 18px; font-weight: 800; letter-spacing: 0.06em;
-  color: #fff; z-index: 3;
-}
-.studio-card .channel-strip .ch-dot {
-  display: inline-flex; gap: 6px;
-}
-.studio-card .channel-strip .ch-dot span {
-  width: 12px; height: 12px; border-radius: 50%;
-  background: rgba(255,255,255,0.45);
-}
-.studio-card .channel-strip .ch-dot span:first-child { background: #fff; }
-
+/* meta chrome removed — clean PNG for direct upload */
 .studio-card .top-meta {
-  display: flex; justify-content: space-between; align-items: center;
-  margin-top: 36px;
+  display: flex; justify-content: flex-start; align-items: center;
 }
 .studio-card .badge {
-  width: 80px; height: 80px; border-radius: 22px;
+  width: 72px; height: 72px; border-radius: 20px;
   display: flex; align-items: center; justify-content: center;
-  font-size: 40px;
-}
-.studio-card .role-tag {
-  padding: 8px 18px; border-radius: 999px;
-  font-size: 16px; font-weight: 800; letter-spacing: 0.06em;
-  text-transform: uppercase;
+  font-size: 36px;
 }
 .studio-card .body {
   flex: 1; display: flex; flex-direction: column; justify-content: center;
@@ -144,10 +123,9 @@ body {
   margin-top: 24px; align-self: flex-start;
 }
 .studio-card .footer {
-  margin-top: auto; padding-top: 24px;
-  display: flex; justify-content: space-between; align-items: flex-end;
-  font-size: 18px; color: #6b7280;
-  border-top: 1px solid #e5e7eb;
+  margin-top: auto; padding-top: 20px;
+  font-size: 16px; color: #9ca3af;
+  letter-spacing: 0.04em;
 }
 
 @media print {
@@ -173,8 +151,6 @@ _TPL_THREADS_QUICK = """
     padding: 28px;
     border-radius: 32px;
   }
-  .threads-quick .channel-strip { background: transparent; }
-  .threads-quick .channel-strip .ch-name { color: #fbbf24; }
   .threads-quick .badge { background: #fef3c7; color: #78350f; }
   .threads-quick .role-tag { background: #1e3a8a; color: #fbbf24; }
   .threads-quick .headline { font-size: 76px; color: #0f172a; }
@@ -183,28 +159,19 @@ _TPL_THREADS_QUICK = """
   .threads-quick .hashtags-row { color: #1e3a8a; }
 </style>
 <div class="threads-quick">
-  <div class="preamble">📐 Threads 카드뉴스 3장 · 1080 × 1350 · 외곽 네이비 + 내부 화이트</div>
+  <div class="preamble">📐 Threads 카드뉴스 3장 · 1080 × 1350</div>
   {% for c in cards %}
   <div class="studio-card" data-card-index="{{ loop.index }}">
-    <div class="channel-strip">
-      <span class="ch-name">@ Threads · {{ loop.index }}/{{ cards|length }}</span>
-      <span class="ch-dot"><span></span><span></span><span></span></span>
-    </div>
     <div class="inner">
       <div class="top-meta">
         <div class="badge">{{ c.icon | default('💬') }}</div>
-        <div class="role-tag">{{ c.role | default('') }}</div>
       </div>
       <div class="body">
         <div class="headline">{{ c.headline | default('') }}</div>
         <div class="subhead">{{ c.subhead | default('') }}</div>
         {% if loop.last and c.cta %}<div class="cta-pill">{{ c.cta }}</div>{% endif %}
-        {% if loop.last and hashtags %}<div class="hashtags-row">{{ hashtags }}</div>{% endif %}
       </div>
-      <div class="footer">
-        <div>{{ brand }}</div>
-        <div>1080 × 1350</div>
-      </div>
+      <div class="footer">{{ brand }}</div>
     </div>
   </div>
   {% endfor %}
@@ -219,11 +186,15 @@ _TPL_THREADS_INSIGHT = """
     padding: 28px;
     border-radius: 32px;
   }
-  .threads-insight .channel-strip .ch-name { color: #c7d2fe; }
   .threads-insight .badge { background: #ede9fe; color: #4338ca; }
   .threads-insight .role-tag { background: #4338ca; color: #ede9fe; }
-  .threads-insight .headline { font-size: 64px; color: #1e1b4b; }
+  .threads-insight .headline { font-size: 60px; color: #1e1b4b; }
   .threads-insight .tag { background: #ede9fe; color: #4338ca; }
+  .threads-insight .body-text {
+    margin-top: 20px;
+    font-size: 24px; line-height: 1.6; color: #1f2937;
+    white-space: pre-line;
+  }
   .threads-insight .stat-block { background: #ede9fe; border-left: 6px solid #4338ca; }
   .threads-insight .stat-value { color: #4338ca; }
   .threads-insight .hashtags-row { color: #4338ca; }
@@ -232,30 +203,24 @@ _TPL_THREADS_INSIGHT = """
   <div class="preamble">📐 Threads 인사이트 5장 · 1080 × 1350</div>
   {% for c in cards %}
   <div class="studio-card" data-card-index="{{ loop.index }}">
-    <div class="channel-strip">
-      <span class="ch-name">@ Threads · Insight · {{ loop.index }}/{{ cards|length }}</span>
-      <span class="ch-dot"><span></span><span></span><span></span></span>
-    </div>
     <div class="inner">
       <div class="top-meta">
         <div class="badge">{{ c.icon | default('📊') }}</div>
-        <div class="role-tag">{{ '%02d'|format(loop.index) }} · {{ c.role | default('') }}</div>
       </div>
       <div class="body">
         <div class="headline">{{ c.headline | default('') }}</div>
         <div class="subhead">{{ c.subhead | default('') }}</div>
+        {% if c.body %}
+        <div class="body-text">{{ c.body }}</div>
+        {% endif %}
         {% if c.stat %}
         <div class="stat-block">
           <div class="stat-value">{{ c.stat.value | default('') }}</div>
           <div class="stat-label">{{ c.stat.label | default('') }}</div>
         </div>
         {% endif %}
-        {% if loop.last and hashtags %}<div class="hashtags-row">{{ hashtags }}</div>{% endif %}
       </div>
-      <div class="footer">
-        <div>{{ brand }}</div>
-        <div>1080 × 1350</div>
-      </div>
+      <div class="footer">{{ brand }}</div>
     </div>
   </div>
   {% endfor %}
@@ -270,7 +235,6 @@ _TPL_INSTAGRAM_INFO = """
     padding: 28px;
     border-radius: 32px;
   }
-  .ig-info .channel-strip .ch-name { color: #fff; }
   .ig-info .badge { background: linear-gradient(135deg, #fef3c7, #fce7f3); color: #9d174d; }
   .ig-info .role-tag { background: #db2777; color: #fff; }
   .ig-info .headline { font-size: 72px; color: #1f2937; }
@@ -284,14 +248,9 @@ _TPL_INSTAGRAM_INFO = """
   <div class="preamble">📐 Instagram 정보형 5장 · 1080 × 1350 · 5장에 캡션·해시태그 내장</div>
   {% for c in cards %}
   <div class="studio-card" data-card-index="{{ loop.index }}">
-    <div class="channel-strip">
-      <span class="ch-name">⊙ Instagram · {{ loop.index }}/{{ cards|length }}</span>
-      <span class="ch-dot"><span></span><span></span><span></span></span>
-    </div>
     <div class="inner">
       <div class="top-meta">
         <div class="badge">{{ c.icon | default('✨') }}</div>
-        <div class="role-tag">{{ '%02d'|format(loop.index) }} · {{ c.role | default('') }}</div>
       </div>
       <div class="body">
         <div class="headline">{{ c.headline | default('') }}</div>
@@ -301,19 +260,8 @@ _TPL_INSTAGRAM_INFO = """
           {% for t in c.tags %}<span class="tag">#{{ t }}</span>{% endfor %}
         </div>
         {% endif %}
-        {% if loop.last and caption %}
-        <div class="caption-block">
-          <div class="caption-title">💬 Caption</div>
-          <div class="caption-body">{{ caption }}</div>
-          {% if hashtags %}<div class="hashtags-row">{{ hashtags }}</div>{% endif %}
-        </div>
-        {% endif %}
-        {% if loop.last and cta %}<div class="cta-pill">{{ cta }}</div>{% endif %}
       </div>
-      <div class="footer">
-        <div>{{ brand }}</div>
-        <div>1080 × 1350</div>
-      </div>
+      <div class="footer">{{ brand }}</div>
     </div>
   </div>
   {% endfor %}
@@ -332,7 +280,6 @@ _TPL_INSTAGRAM_STORY = """
     background: #fefcf8;
     color: #292524;
   }
-  .ig-story .channel-strip .ch-name { color: #fafaf9; font-style: italic; font-family: """ + _FONTS_SERIF + """; }
   .ig-story .badge { background: #292524; color: #fefcf8; border-radius: 50%; }
   .ig-story .role-tag { background: transparent; color: #78716c; font-family: """ + _FONTS_SERIF + """; font-style: italic; }
   .ig-story .headline {
@@ -348,29 +295,15 @@ _TPL_INSTAGRAM_STORY = """
   <div class="preamble">📐 Instagram 스토리텔링 7장 · 1080 × 1350 · 7장에 캡션 내장</div>
   {% for c in cards %}
   <div class="studio-card" data-card-index="{{ loop.index }}">
-    <div class="channel-strip">
-      <span class="ch-name">— Instagram · chapter {{ loop.index }}/{{ cards|length }} —</span>
-      <span class="ch-dot"><span></span><span></span><span></span></span>
-    </div>
     <div class="inner">
       <div class="top-meta">
         <div class="badge">{{ c.icon | default('🌅') }}</div>
-        <div class="role-tag">— {{ c.role | default('') }} —</div>
       </div>
       <div class="body">
         <div class="headline">{{ c.headline | default('') }}</div>
         <div class="subhead">{{ c.subhead | default('') }}</div>
-        {% if loop.last and caption %}
-        <div class="caption-block">
-          <div class="caption-body">{{ caption }}</div>
-          {% if hashtags %}<div class="hashtags-row">{{ hashtags }}</div>{% endif %}
-        </div>
-        {% endif %}
       </div>
-      <div class="footer">
-        <div>— {{ brand }} —</div>
-        <div>1080 × 1350</div>
-      </div>
+      <div class="footer">— {{ brand }} —</div>
     </div>
   </div>
   {% endfor %}
@@ -386,9 +319,6 @@ _TPL_KAKAO = """
     border-radius: 28px;
   }
   .kk .inner { padding: 48px 44px 36px; }
-  .kk .channel-strip .ch-name { color: #422006; }
-  .kk .channel-strip .ch-dot span { background: rgba(66,32,6,0.35); }
-  .kk .channel-strip .ch-dot span:first-child { background: #422006; }
   .kk .badge { background: #fef3c7; color: #78350f; width: 64px; height: 64px; font-size: 32px; border-radius: 18px; }
   .kk .role-tag { background: #422006; color: #fde047; font-size: 14px; padding: 6px 14px; }
   .kk .top-meta { margin-top: 28px; }
@@ -403,27 +333,19 @@ _TPL_KAKAO = """
   .kk .footer { font-size: 14px; }
 </style>
 <div class="kk">
-  <div class="preamble">📐 KakaoTalk 카드뉴스 · 800 × 800 · 외곽 노랑 + 내부 화이트</div>
+  <div class="preamble">📐 KakaoTalk 카드뉴스 · 800 × 800</div>
   {% for c in cards %}
   <div class="studio-card" data-card-index="{{ loop.index }}">
-    <div class="channel-strip">
-      <span class="ch-name">💬 KakaoTalk · {{ loop.index }}/{{ cards|length }}</span>
-      <span class="ch-dot"><span></span><span></span><span></span></span>
-    </div>
     <div class="inner">
       <div class="top-meta">
         <div class="badge">{{ c.icon | default('💬') }}</div>
-        <div class="role-tag">{{ '%02d'|format(loop.index) }} · {{ c.role | default('') }}</div>
       </div>
       <div class="body">
         <div class="headline">{{ c.headline | default('') }}</div>
         <div class="subhead">{{ c.subhead | default('') }}</div>
         {% if c.button %}<div class="cta-pill">{{ c.button }}</div>{% endif %}
       </div>
-      <div class="footer">
-        <div>{{ brand }}</div>
-        <div>800 × 800</div>
-      </div>
+      <div class="footer">{{ brand }}</div>
     </div>
   </div>
   {% endfor %}
