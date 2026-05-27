@@ -80,10 +80,24 @@ def _execute_one(key: str, ctx: StudioContext) -> StudioResult:
                 )
                 (out_dir / "output.json").write_text(text, encoding="utf-8")
                 res.json_raw = text
-            except Exception:
-                # JSON parse failed — leave md_text as raw LLM text so the
-                # user can see what went wrong in the 미리보기 tab.
-                pass
+            except Exception as e:
+                # JSON parse failed — wrap the raw LLM text in a fenced
+                # code block so Streamlit's markdown renderer doesn't try
+                # to interpret things like `~~` as strikethrough.
+                md_text = (
+                    f"# {studio.title}\n\n"
+                    f"## ⚠️ JSON 파싱 실패 — 재실행 권장\n\n"
+                    f"카드 디자인은 LLM의 구조화된 JSON 출력에 의존합니다. "
+                    f"이번 응답은 JSON 규칙에 맞지 않아 SNS 본문 초안과 카드 PNG가 정상 생성되지 않았습니다.\n\n"
+                    f"**에러**: `{type(e).__name__}: {e}`\n\n"
+                    f"### 원본 출력 (디버그)\n\n"
+                    f"```json\n{text}\n```\n"
+                )
+                res.json_raw = text
+                try:
+                    (out_dir / "output.json").write_text(text, encoding="utf-8")
+                except OSError:
+                    pass
 
         out_path = out_dir / "output.md"
         out_path.write_text(md_text, encoding="utf-8")
