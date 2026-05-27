@@ -31,6 +31,12 @@ class Settings:
     api_key: str = ""
     model: str = FIXED_MODEL  # locked — no UI to change
 
+    # Image generation (Nano Banana by default). image_base_url empty
+    # → falls back to base_url. Future: local model URL goes here.
+    image_base_url: str = ""
+    image_api_key: str = ""  # empty → falls back to api_key
+    image_model: str = IMAGE_MODEL
+
     # Generation — 8192 to comfortably fit long-form Korean output
     max_tokens: int = 8192
     temperature: float = 0.7
@@ -43,10 +49,21 @@ class Settings:
     extra: dict = field(default_factory=dict)
 
 
+def effective_image_url(s: Settings) -> str:
+    return (s.image_base_url or s.base_url or "").strip()
+
+
+def effective_image_key(s: Settings) -> str:
+    return (s.image_api_key or s.api_key or "").strip()
+
+
 def _env_defaults() -> Settings:
     s = Settings()
     s.base_url = os.environ.get("UBION_LITELLM_URL", s.base_url)
     s.api_key = os.environ.get("UBION_LITELLM_KEY", s.api_key)
+    s.image_base_url = os.environ.get("UBION_IMAGE_URL", s.image_base_url)
+    s.image_api_key = os.environ.get("UBION_IMAGE_KEY", s.image_api_key)
+    s.image_model = os.environ.get("UBION_IMAGE_MODEL", s.image_model)
     return s
 
 

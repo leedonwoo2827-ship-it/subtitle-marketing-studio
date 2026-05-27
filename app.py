@@ -154,12 +154,37 @@ def render_top_api_bar() -> None:
     else:
         badge = "⚠️ API 키 미설정 — 펼쳐서 입력하세요"
 
-    with st.expander(f"⚙ API 설정 — {badge} · 모델 `{settings_mod.FIXED_MODEL}`", expanded=not configured):
+    with st.expander(f"⚙ API 설정 — {badge} · 텍스트 `{settings_mod.FIXED_MODEL}` · 이미지 `{s.image_model}`", expanded=not configured):
+        st.markdown("**📝 텍스트 LLM** (블로그·보도자료)")
         c1, c2 = st.columns([2, 3])
         with c1:
             s.base_url = st.text_input("API URL", value=s.base_url, help="Ubion LiteLLM 프록시 주소")
         with c2:
             s.api_key = st.text_input("API 키", value=s.api_key, type="password", help="사내 대시보드(/ui/)에서 발급한 virtual key")
+
+        st.markdown("**🖼 이미지 모델** (카드뉴스 5종 · 비워두면 위 API URL/키 재사용)")
+        i1, i2, i3 = st.columns([2, 2, 2])
+        with i1:
+            s.image_base_url = st.text_input(
+                "이미지 API URL",
+                value=s.image_base_url,
+                placeholder="비워두면 위 URL 재사용",
+                help="나중에 로컬 이미지 모델 붙일 때 여기에 로컬 URL 입력",
+            )
+        with i2:
+            s.image_api_key = st.text_input(
+                "이미지 API 키",
+                value=s.image_api_key,
+                type="password",
+                placeholder="비워두면 위 키 재사용",
+            )
+        with i3:
+            s.image_model = st.text_input(
+                "이미지 모델",
+                value=s.image_model,
+                placeholder=settings_mod.IMAGE_MODEL,
+                help="Gemini Nano Banana / gpt-image-2 / 향후 로컬 모델 이름",
+            )
 
         with st.expander("고급 설정", expanded=False):
             c3, c4, c5 = st.columns(3)
@@ -268,7 +293,13 @@ def _build_ctx() -> StudioContext | None:
         subtitle_text=st.session_state.subtitle_result.text,
         channel_guide=_load_channel_guide(),
         llm=llm_mod.build_provider(s),
-        extra={"target_keyword": s.target_keyword, "brand_name": s.brand_name},
+        extra={
+            "target_keyword": s.target_keyword,
+            "brand_name": s.brand_name,
+            "image_base_url": settings_mod.effective_image_url(s),
+            "image_api_key": settings_mod.effective_image_key(s),
+            "image_model": s.image_model,
+        },
         parallelism=s.parallelism,
         max_tokens=s.max_tokens,
         temperature=s.temperature,

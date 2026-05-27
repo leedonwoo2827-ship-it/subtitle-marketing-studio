@@ -167,8 +167,8 @@ def _extract_image_data_url(msg) -> tuple[str, str]:
     return "", f"could not locate image data URL in response{keys_hint}"
 
 
-def _generate_one(prompt: str, *, base_url: str, api_key: str) -> tuple[bytes | None, str]:
-    """Call Nano Banana via the Ubion LiteLLM proxy. Returns (png_bytes, error)."""
+def _generate_one(prompt: str, *, base_url: str, api_key: str, model: str = IMAGE_MODEL) -> tuple[bytes | None, str]:
+    """Call image model via the configured endpoint. Returns (png_bytes, error)."""
     try:
         from openai import OpenAI
     except ImportError as e:
@@ -178,7 +178,7 @@ def _generate_one(prompt: str, *, base_url: str, api_key: str) -> tuple[bytes | 
         url = (base_url or "").rstrip("/")
         client = OpenAI(api_key=api_key, base_url=f"{url}/v1")
         resp = client.chat.completions.create(
-            model=IMAGE_MODEL,
+            model=model,
             messages=[{"role": "user", "content": prompt}],
             modalities=["image", "text"],
         )
@@ -211,7 +211,7 @@ def _ensure_size(raw: bytes, size: tuple[int, int]) -> bytes:
 
 def render(
     channel_key: str, md_text: str, out_dir: Path, *,
-    base_url: str, api_key: str, brand: str = "",
+    base_url: str, api_key: str, brand: str = "", model: str = IMAGE_MODEL,
 ) -> ImageRenderResult:
     if channel_key not in _CHANNEL_SIZES:
         return ImageRenderResult(error=f"unknown image channel: {channel_key}")
@@ -231,7 +231,7 @@ def render(
 
     for i, card in enumerate(cards, start=1):
         prompt = _visual_prompt(card, channel=channel_key, size=size, brand=brand, idx=i, total=len(cards))
-        raw, err = _generate_one(prompt, base_url=base_url, api_key=api_key)
+        raw, err = _generate_one(prompt, base_url=base_url, api_key=api_key, model=model)
         if raw is None:
             last_error = err
             continue

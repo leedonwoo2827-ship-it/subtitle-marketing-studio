@@ -82,10 +82,14 @@ def _execute_one(key: str, ctx: StudioContext) -> StudioResult:
 
         # Image rendering: Nano Banana preferred, fallback to Playwright PNG
         if studio.image_renderer:
+            img_url = ctx.extra.get("image_base_url") or getattr(ctx.llm, "base_url", "")
+            img_key = ctx.extra.get("image_api_key") or getattr(ctx.llm, "api_key", "")
+            img_model = ctx.extra.get("image_model") or ""
             img_result = image_render.render(
                 studio.image_renderer, text, out_dir,
-                base_url=getattr(ctx.llm, "base_url", ""),
-                api_key=getattr(ctx.llm, "api_key", ""),
+                base_url=img_url,
+                api_key=img_key,
+                model=img_model or image_render.IMAGE_MODEL,
                 brand=ctx.extra.get("brand_name", ""),
             )
             res.png_paths = list(img_result.paths)
