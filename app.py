@@ -198,26 +198,37 @@ def render_studio_panel() -> None:
         st.info("\n\n".join(missing))
         return
 
-    col_a, col_b = st.columns([2, 1])
+    col_a, col_b, col_c = st.columns([2, 0.8, 0.8])
     with col_a:
         if st.button("▶ 전체 17개 실행", type="primary", use_container_width=True, disabled=not ready):
             _run_bulk()
     with col_b:
         done_n = sum(1 for r in st.session_state.results.values() if r.status == "done")
         st.metric("완료", f"{done_n}/17")
+    with col_c:
+        with st.popover("🗑 초기화", use_container_width=True, disabled=not st.session_state.results):
+            st.caption("17개 산출물을 모두 비웁니다. 자막·프로젝트는 유지됩니다.")
+            if st.checkbox("네, 모두 비웁니다", key="del_all_confirm"):
+                if st.button("🗑 전체 초기화 실행", use_container_width=True):
+                    _delete_all_results()
+                    st.rerun()
 
     for section_name, studios in sections().items():
         with st.expander(section_name, expanded=True):
             for s in studios:
                 r = st.session_state.results.get(s.key)
                 icon = STATUS_ICON.get(r.status if r else "pending", "⚪")
-                row = st.columns([0.4, 4, 1, 1])
+                has_done = bool(r and r.status == "done")
+                row = st.columns([0.4, 4, 0.9, 0.9, 0.5])
                 row[0].markdown(f"### {icon}")
                 row[1].markdown(f"**{s.title}**  \n<span style='color:#888;font-size:0.85em'>{s.description}</span>", unsafe_allow_html=True)
-                if row[2].button("열기", key=f"open_{s.key}", use_container_width=True, disabled=not (r and r.status == "done")):
+                if row[2].button("열기", key=f"open_{s.key}", use_container_width=True, disabled=not has_done):
                     st.session_state.selected_key = s.key
                 if row[3].button("재실행", key=f"rerun_{s.key}", use_container_width=True):
                     _run_single(s.key)
+                if row[4].button("🗑", key=f"del_{s.key}", use_container_width=True, disabled=not r, help="이 스튜디오 산출물 비우기"):
+                    _delete_one_result(s.key)
+                    st.rerun()
                 if r and r.status == "error":
                     st.caption(f"❌ {r.error.splitlines()[0] if r.error else 'unknown error'}")
 
@@ -269,6 +280,27 @@ def _run_bulk() -> None:
                 st.code(r.error, language="text")
             if len(errs) > 5:
                 st.caption(f"… 외 {len(errs) - 5}개 (모두 비슷한 원인일 가능성)")
+
+
+def _delete_one_result(key: str) -> None:
+    pd = _project_dir()
+    if pd:
+        shutil.rmtree(pd / key, ignore_errors=True)
+    st.session_state.results.pop(key, None)
+    if st.session_state.selected_key == key:
+        st.session_state.selected_key = None
+    st.toast(f"산출물 비움: {key}", icon="🗑")
+
+
+def _delete_all_results() -> None:
+    pd = _project_dir()
+    if pd:
+        for s in list_studios():
+            shutil.rmtree(pd / s.key, ignore_errors=True)
+    st.session_state.results = {}
+    st.session_state.selected_key = None
+    st.session_state.pop("del_all_confirm", None)
+    st.toast("17개 산출물 모두 비움 (자막은 유지)", icon="🗑")
 
 
 def _run_single(key: str) -> None:
