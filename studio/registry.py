@@ -18,9 +18,9 @@ class ThreadsQuickStudio(StudioBase):
     title = "01. Threads 간결형 카드뉴스"
     section = CARD
     channel_section = "Threads 간결형 카드뉴스"
-    description = "PNG 3장 (1080×1350) · 빠른 소비, 짧은 카피"
+    description = "PNG 3장 (1080×1350) · Nano Banana ≈$0.12 (180원)"
     html_renderer = "cards_threads_quick"
-    png_renderer = "cards_threads_quick"
+    image_renderer = "image_threads_quick"
 
 
 class ThreadsInsightStudio(StudioBase):
@@ -29,9 +29,9 @@ class ThreadsInsightStudio(StudioBase):
     title = "02. Threads 인사이트형 카드뉴스"
     section = CARD
     channel_section = "Threads 인사이트형 카드뉴스"
-    description = "PNG 5장 (1080×1350) · 한 주제 deep-dive"
+    description = "PNG 5장 (1080×1350) · Nano Banana ≈$0.20 (300원)"
     html_renderer = "cards_threads_insight"
-    png_renderer = "cards_threads_insight"
+    image_renderer = "image_threads_insight"
 
 
 class InstagramInfoStudio(StudioBase):
@@ -40,9 +40,9 @@ class InstagramInfoStudio(StudioBase):
     title = "03. Instagram 정보형 카드뉴스"
     section = CARD
     channel_section = "Instagram 정보형 카드뉴스"
-    description = "PNG 5장 (1080×1350) · 캡션·해시태그 5장 카드 내 내장"
+    description = "PNG 5장 (1080×1350) · 캡션 카드 내 내장 · ≈$0.20 (300원)"
     html_renderer = "cards_instagram_info"
-    png_renderer = "cards_instagram_info"
+    image_renderer = "image_instagram_info"
 
 
 class InstagramStoryStudio(StudioBase):
@@ -51,9 +51,9 @@ class InstagramStoryStudio(StudioBase):
     title = "04. Instagram 스토리텔링형 카드뉴스"
     section = CARD
     channel_section = "Instagram 스토리텔링형 카드뉴스"
-    description = "PNG 7장 (1080×1350) · 서사·에피소드, 7장 카드 내 캡션"
+    description = "PNG 7장 (1080×1350) · 서사·에피소드 · ≈$0.28 (420원)"
     html_renderer = "cards_instagram_story"
-    png_renderer = "cards_instagram_story"
+    image_renderer = "image_instagram_story"
 
 
 class KakaoCardsStudio(StudioBase):
@@ -62,9 +62,9 @@ class KakaoCardsStudio(StudioBase):
     title = "05. 카카오톡 카드뉴스"
     section = CARD
     channel_section = "카카오톡 카드뉴스 (친구톡 / 채널톡)"
-    description = "PNG 1~3장 (800×800) · 친구톡·채널톡 시안"
+    description = "PNG 1~3장 (800×800) · Nano Banana ≈$0.08 (120원)"
     html_renderer = "cards_kakao"
-    png_renderer = "cards_kakao"
+    image_renderer = "image_kakao"
 
 
 class PressReleaseStudio(StudioBase):

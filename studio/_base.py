@@ -85,7 +85,8 @@ class StudioBase:
     description: str = ""
     max_tokens: int = 0                  # 0 = use ctx default; override per-studio
     html_renderer: str = "generic"       # core.html_render.RENDERERS key
-    png_renderer: str = ""               # core.png_render.RENDERERS key; "" = no PNG
+    png_renderer: str = ""               # core.png_render: Playwright fallback (HTML→PNG); "" disables
+    image_renderer: str = ""             # core.image_render: Nano Banana image gen; "" disables
     docx_renderer: str = ""              # core.docx_render.RENDERERS key; "" = no DOCX
     output_filename: str = "output.md"
 

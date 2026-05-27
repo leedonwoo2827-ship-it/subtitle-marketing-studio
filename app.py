@@ -206,6 +206,20 @@ def render_studio_panel() -> None:
         st.info("\n\n".join(missing))
         return
 
+    # Cost preview (Nano Banana image generation across 5 card studios)
+    from core import image_render as _img
+    est_usd = sum(_img.estimated_cost_usd(s.image_renderer) for s in list_studios() if s.image_renderer)
+    est_krw = settings_mod.krw(est_usd)
+    actual_usd = sum(getattr(r, "image_cost_usd", 0) or 0 for r in st.session_state.results.values())
+    actual_krw = settings_mod.krw(actual_usd)
+    cost_line = (
+        f"💰 예상 이미지 비용 **~${est_usd:.2f}** (≈**{est_krw:,}원**) · "
+        f"@ Nano Banana × 22장 · 환율 {settings_mod.USD_KRW:,.2f}원/USD"
+    )
+    if actual_usd > 0:
+        cost_line = f"💰 실제 사용 **${actual_usd:.3f}** (≈**{actual_krw:,}원**) · " + cost_line.split(" · ", 1)[1]
+    st.caption(cost_line)
+
     col_a, col_b, col_c = st.columns([2, 0.8, 0.8])
     with col_a:
         if st.button("▶ 전체 15개 실행", type="primary", use_container_width=True, disabled=not ready):
@@ -399,8 +413,14 @@ def render_output_panel() -> None:
     with tab_objs[ti]:
         st.code(r.output, language="markdown")
 
+    if has_png and getattr(r, "image_cost_usd", 0):
+        used = "Nano Banana 이미지 생성" if r.image_renderer_used == "image" else "Playwright HTML 캡처"
+        st.caption(
+            f"🖼 {used} · 카드 {len(r.png_paths)}장 · "
+            f"비용 ${r.image_cost_usd:.3f} (≈{settings_mod.krw(r.image_cost_usd):,}원)"
+        )
     if r.png_error:
-        st.warning(f"🖼 PNG 실패: {r.png_error}")
+        st.warning(f"🖼 PNG 메모: {r.png_error}")
     if r.docx_error:
         st.warning(f"📄 DOCX 실패: {r.docx_error}")
 

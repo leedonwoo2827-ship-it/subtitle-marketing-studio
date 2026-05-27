@@ -12,7 +12,7 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Iterable
 
-from core import docx_render, html_render, png_render
+from core import docx_render, html_render, image_render, png_render
 from studio import get_studio, list_studios
 from studio._base import StudioContext
 
@@ -31,6 +31,8 @@ class StudioResult:
     png_error: str = ""
     docx_path: Path | None = None
     docx_error: str = ""
+    image_cost_usd: float = 0.0
+    image_renderer_used: str = ""  # "image" (Nano Banana) | "playwright" | ""
 
 
 @dataclass
@@ -78,10 +80,32 @@ def _execute_one(key: str, ctx: StudioContext) -> StudioResult:
         res.html = html
         res.html_path = html_path
 
-        if studio.png_renderer:
+        # Image rendering: Nano Banana preferred, fallback to Playwright PNG
+        if studio.image_renderer:
+            img_result = image_render.render(
+                studio.image_renderer, text, out_dir,
+                base_url=getattr(ctx.llm, "base_url", ""),
+                api_key=getattr(ctx.llm, "api_key", ""),
+                brand=ctx.extra.get("brand_name", ""),
+            )
+            res.png_paths = list(img_result.paths)
+            res.png_error = img_result.error
+            res.image_cost_usd = img_result.cost_usd
+            res.image_renderer_used = "image" if img_result.paths else ""
+            # Fallback to Playwright capture if Nano Banana yielded nothing
+            if not img_result.paths and studio.png_renderer:
+                fallback = png_render.render(studio.png_renderer, html, out_dir)
+                res.png_paths = list(fallback.paths)
+                if fallback.paths:
+                    res.png_error = f"image gen failed ({img_result.error}); fell back to Playwright"
+                    res.image_renderer_used = "playwright"
+                else:
+                    res.png_error = f"image: {img_result.error} | playwright: {fallback.error}"
+        elif studio.png_renderer:
             png_result = png_render.render(studio.png_renderer, html, out_dir)
             res.png_paths = list(png_result.paths)
             res.png_error = png_result.error
+            res.image_renderer_used = "playwright" if png_result.paths else ""
 
         if studio.docx_renderer:
             docx_result = docx_render.render(studio.docx_renderer, text, out_dir)

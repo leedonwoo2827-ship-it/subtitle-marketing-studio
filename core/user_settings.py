@@ -14,6 +14,16 @@ SETTINGS_PATH = Path(__file__).resolve().parent.parent / "data" / "user_settings
 DEFAULT_BASE_URL = "http://192.168.50.119:4000"
 FIXED_MODEL = "deepseek-v4-flash"
 
+# Image generation (Gemini Nano Banana via Ubion LiteLLM proxy)
+IMAGE_MODEL = "gemini-3.1-flash-image-preview"
+IMAGE_COST_USD = 0.04   # approximate per-image cost
+USD_KRW = 1504.71       # 2026-05-27 exchange rate; update as needed
+
+
+def krw(usd: float) -> int:
+    """Convert USD → KRW (integer)."""
+    return int(round(usd * USD_KRW))
+
 
 @dataclass
 class Settings:
