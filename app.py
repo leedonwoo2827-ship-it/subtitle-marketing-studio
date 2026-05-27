@@ -202,27 +202,30 @@ def render_studio_panel() -> None:
             missing.append("**1단계** — 좌측 사이드바(`📂 프로젝트`) → `(새 프로젝트)` 선택 → 이름 입력 → `➕ 만들기`")
         if not has_subtitle:
             missing.append("**2단계** — 우측 `🎬 자막 소스` 패널에서 .srt/.vtt/.ass/.txt 업로드")
-        missing.append("**3단계** — 여기서 `▶ 전체 15개 실행`")
+        missing.append("**3단계** — 여기서 `▶ 텍스트 10개 일괄 실행` (카드뉴스는 개별 ▶ 클릭)")
         st.info("\n\n".join(missing))
         return
 
-    # Cost preview (Nano Banana image generation across 5 card studios)
-    from core import image_render as _img
-    est_usd = sum(_img.estimated_cost_usd(s.image_renderer) for s in list_studios() if s.image_renderer)
-    est_krw = settings_mod.krw(est_usd)
-    actual_usd = sum(getattr(r, "image_cost_usd", 0) or 0 for r in st.session_state.results.values())
-    actual_krw = settings_mod.krw(actual_usd)
+    # Cost: bulk run = text-only (cheap); image cards run individually
+    text_studios = [s for s in list_studios() if not s.image_renderer]
+    n_text = len(text_studios)
+    actual_image_usd = sum(getattr(r, "image_cost_usd", 0) or 0 for r in st.session_state.results.values())
+    actual_image_krw = settings_mod.krw(actual_image_usd)
     cost_line = (
-        f"💰 예상 이미지 비용 **~${est_usd:.2f}** (≈**{est_krw:,}원**) · "
-        f"@ Nano Banana × 22장 · 환율 {settings_mod.USD_KRW:,.2f}원/USD"
+        f"💰 일괄 실행 = 텍스트 {n_text}개만 (블로그 + 보도자료) · 추정 비용 **<30원** · "
+        f"카드뉴스 5종은 카드당 **~60원** 개별 실행"
     )
-    if actual_usd > 0:
-        cost_line = f"💰 실제 사용 **${actual_usd:.3f}** (≈**{actual_krw:,}원**) · " + cost_line.split(" · ", 1)[1]
+    if actual_image_usd > 0:
+        cost_line += f" · 누적 이미지 사용 **${actual_image_usd:.3f}** (≈**{actual_image_krw:,}원**)"
     st.caption(cost_line)
 
     col_a, col_b, col_c = st.columns([2, 0.8, 0.8])
     with col_a:
-        if st.button("▶ 전체 15개 실행", type="primary", use_container_width=True, disabled=not ready):
+        if st.button(
+            f"▶ 텍스트 {n_text}개 일괄 실행",
+            type="primary", use_container_width=True, disabled=not ready,
+            help="블로그 9개 + 보도자료 1개. 카드뉴스는 비용 발생이라 개별 실행.",
+        ):
             _run_bulk()
     with col_b:
         done_n = sum(1 for r in st.session_state.results.values() if r.status == "done")
@@ -278,9 +281,11 @@ def _run_bulk() -> None:
         st.error("프로젝트와 자막을 먼저 준비하세요.")
         return
 
-    with st.spinner(f"15개 스튜디오 실행 중… (모델: `{ctx.llm.model}`, 병렬 {ctx.parallelism})"):
+    # Bulk = text-only (image cards run individually to control cost)
+    text_keys = [s.key for s in list_studios() if not s.image_renderer]
+    with st.spinner(f"텍스트 {len(text_keys)}개 실행 중… (모델: `{ctx.llm.model}`, 병렬 {ctx.parallelism})"):
         t0 = time.time()
-        report = run_all(ctx)
+        report = run_all(ctx, keys=text_keys)
         elapsed = time.time() - t0
 
     st.session_state.results.update(report.results)
@@ -288,10 +293,11 @@ def _run_bulk() -> None:
     done = [r for r in report.results.values() if r.status == "done"]
     errs = [r for r in report.results.values() if r.status == "error"]
 
+    n_total = len(text_keys)
     if done and not errs:
-        st.success(f"✅ 15개 모두 완료 · {elapsed:.1f}s")
+        st.success(f"✅ 텍스트 {n_total}개 모두 완료 · {elapsed:.1f}s")
     elif done:
-        st.warning(f"⚠️ {len(done)}/15 완료, {len(errs)}개 실패 · {elapsed:.1f}s")
+        st.warning(f"⚠️ {len(done)}/{n_total} 완료, {len(errs)}개 실패 · {elapsed:.1f}s")
     else:
         st.error(f"❌ 모든 스튜디오 실패 · {elapsed:.1f}s — API 키·URL·연결을 확인하세요.")
 
@@ -566,7 +572,7 @@ def main() -> None:
     _init_state()
     render_sidebar()
     st.title("Subtitle Marketing Studio")
-    st.caption("자막 1개 → 17가지 마케팅 텍스트 자산 (블로그·뉴스레터·LinkedIn·카드뉴스·SEO·PAS·광고·푸시·랜딩·리뷰·페르소나·태그·프로모션·보도자료 …)")
+    st.caption("자막 1개 → 15개 채널-레디 산출물 (블로그 9 · 보도자료 · 카드뉴스 5 · Threads·Instagram·KakaoTalk)")
     render_top_api_bar()
 
     left, center, right = st.columns([1.1, 1.4, 0.9], gap="medium")
