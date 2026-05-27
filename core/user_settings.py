@@ -21,8 +21,8 @@ class Settings:
     api_key: str = ""
     model: str = FIXED_MODEL  # locked — no UI to change
 
-    # Generation
-    max_tokens: int = 4096
+    # Generation — 8192 to comfortably fit long-form Korean output
+    max_tokens: int = 8192
     temperature: float = 0.7
     parallelism: int = 4
 

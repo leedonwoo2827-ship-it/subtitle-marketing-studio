@@ -13,6 +13,7 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Iterable
 
+from core import html_render
 from studio import get_studio, list_studios
 from studio._base import StudioContext
 
@@ -25,6 +26,8 @@ class StudioResult:
     output: str = ""
     error: str = ""
     output_path: Path | None = None
+    html_path: Path | None = None
+    html: str = ""
 
 
 @dataclass
@@ -39,10 +42,20 @@ def _execute_one(key: str, ctx: StudioContext) -> StudioResult:
         text = studio.render(ctx)
         out_dir = ctx.project_dir / key
         out_dir.mkdir(parents=True, exist_ok=True)
-        out_path = out_dir / studio.output_filename
+        out_path = out_dir / "output.md"
         out_path.write_text(text, encoding="utf-8")
+        html = html_render.render(
+            studio.html_renderer,
+            text,
+            title=studio.title,
+            brand=ctx.extra.get("brand_name", ""),
+        )
+        html_path = out_dir / "output.html"
+        html_path.write_text(html, encoding="utf-8")
         res.output = text
         res.output_path = out_path
+        res.html = html
+        res.html_path = html_path
         res.status = "done"
     except Exception as e:
         res.error = f"{type(e).__name__}: {e}\n{traceback.format_exc(limit=4)}"

@@ -63,11 +63,14 @@ def _load_existing_results() -> None:
     if not pd:
         return
     for s in list_studios():
-        out = pd / s.key / s.output_filename
+        out = pd / s.key / "output.md"
         if out.exists() and s.key not in st.session_state.results:
+            html_path = pd / s.key / "output.html"
+            html_text = html_path.read_text(encoding="utf-8") if html_path.exists() else ""
             st.session_state.results[s.key] = StudioResult(
                 key=s.key, title=s.title, status="done",
                 output=out.read_text(encoding="utf-8"), output_path=out,
+                html=html_text, html_path=html_path if html_path.exists() else None,
             )
 
 
@@ -212,6 +215,8 @@ def _build_ctx() -> StudioContext | None:
         llm=llm_mod.build_provider(s),
         extra={"target_keyword": s.target_keyword, "brand_name": s.brand_name},
         parallelism=s.parallelism,
+        max_tokens=s.max_tokens,
+        temperature=s.temperature,
     )
 
 
@@ -263,6 +268,15 @@ def _run_single(key: str) -> None:
 
 
 # ─────────────────────────── center: output preview ───────────────────────────
+def _prefixed_name(key: str, ext: str) -> str:
+    """File name like `04_ebook_chapter.md` for downloads."""
+    try:
+        order = get_studio(key).order
+    except Exception:
+        return f"{key}.{ext}"
+    return f"{order:02d}_{key}.{ext}"
+
+
 def render_output_panel() -> None:
     st.subheader("📄 산출물")
     key = st.session_state.selected_key
@@ -280,23 +294,43 @@ def render_output_panel() -> None:
             st.code(r.error)
         return
 
-    tab_view, tab_raw = st.tabs(["미리보기", "Markdown 원본"])
+    tab_view, tab_html, tab_raw = st.tabs(["📝 미리보기", "🎨 HTML 미리보기", "🔧 Markdown 원본"])
     with tab_view:
         st.markdown(r.output)
+    with tab_html:
+        if r.html:
+            studio_obj = get_studio(r.key)
+            height = 1600 if studio_obj.html_renderer == "instagram_cards" else 900
+            st.components.v1.html(r.html, height=height, scrolling=True)
+        else:
+            st.caption("HTML 미리보기 없음. 재실행하면 생성됩니다.")
     with tab_raw:
         st.code(r.output, language="markdown")
 
-    c1, c2 = st.columns(2)
+    c1, c2, c3 = st.columns(3)
     with c1:
         st.download_button(
-            "💾 .md 다운로드",
+            "💾 .md",
             data=r.output.encode("utf-8"),
-            file_name=f"{r.key}.md",
+            file_name=_prefixed_name(r.key, "md"),
             mime="text/markdown",
             use_container_width=True,
+            key=f"dl_md_{r.key}",
         )
     with c2:
-        _render_zip_download(container=c2)
+        if r.html:
+            st.download_button(
+                "🎨 .html",
+                data=r.html.encode("utf-8"),
+                file_name=_prefixed_name(r.key, "html"),
+                mime="text/html",
+                use_container_width=True,
+                key=f"dl_html_{r.key}",
+            )
+        else:
+            st.button("🎨 .html", disabled=True, use_container_width=True, key=f"dl_html_dis_{r.key}")
+    with c3:
+        _render_zip_download(container=c3)
 
 
 def _render_zip_download(container=None) -> None:
@@ -306,10 +340,14 @@ def _render_zip_download(container=None) -> None:
     buf = io.BytesIO()
     with zipfile.ZipFile(buf, "w", zipfile.ZIP_DEFLATED) as zf:
         for r in done:
-            zf.writestr(f"{r.key}.md", r.output)
+            md_name = _prefixed_name(r.key, "md")
+            zf.writestr(f"md/{md_name}", r.output)
+            if r.html:
+                html_name = _prefixed_name(r.key, "html")
+                zf.writestr(f"html/{html_name}", r.html)
     target = container or st
     target.download_button(
-        f"📦 전체 ZIP ({len(done)}개)",
+        f"📦 ZIP ({len(done)})",
         data=buf.getvalue(),
         file_name=f"{st.session_state.project_name or 'output'}.zip",
         mime="application/zip",

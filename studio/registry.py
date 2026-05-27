@@ -14,6 +14,7 @@ class BlogEditorStudio(StudioBase):
     section = CORE
     channel_section = "블로그 (네이버 / 티스토리 / Medium)"
     description = "구어체 자막을 서론-본론-결론·H2/H3 구조의 2,000~4,000자 칼럼으로 재가공"
+    max_tokens = 10240  # 4,000자 본문 + 여유
 
 
 class NewsletterStudio(StudioBase):
@@ -41,6 +42,7 @@ class EbookChapterStudio(StudioBase):
     section = CORE
     channel_section = "블로그 (네이버 / 티스토리 / Medium)"
     description = "책 한 단원처럼 문맥을 다듬어 체계적으로 서술한 전자책 텍스트"
+    max_tokens = 12288  # 6,000자 본문 + 여유, 잘림 방지
 
 
 class SEOMetaStudio(StudioBase):
@@ -77,6 +79,7 @@ class InstagramCardsStudio(StudioBase):
     section = SEO
     channel_section = "인스타그램 카드뉴스 (텍스트 only)"
     description = "1~5장 슬라이드별 핵심 카피 + 캡션 + 해시태그"
+    html_renderer = "instagram_cards"  # 1080×1350 carousel 5장
 
 
 class PASCopyStudio(StudioBase):

@@ -17,6 +17,8 @@ class StudioContext:
     llm: Any                     # LLMProvider
     extra: dict = field(default_factory=dict)
     parallelism: int = 4
+    max_tokens: int = 8192
+    temperature: float = 0.7
 
 
 def load_prompt(key: str) -> str:
@@ -85,6 +87,8 @@ class StudioBase:
     channel_section: str | None = None
     output_filename: str = "output.md"
     description: str = ""
+    max_tokens: int = 0              # 0 = use ctx default; override per-studio if longer needed
+    html_renderer: str = "generic"   # key into core.html_render.RENDERERS
 
     def render(self, ctx: StudioContext) -> str:
         prompt = load_prompt(self.key)
@@ -99,4 +103,10 @@ class StudioBase:
         }
         system_filled = _safe_format(system, bindings)
         user_filled = _safe_format(user, bindings)
-        return ctx.llm.generate(system_filled, user_filled)
+        budget = self.max_tokens or getattr(ctx, "max_tokens", 8192)
+        return ctx.llm.generate(
+            system_filled,
+            user_filled,
+            max_tokens=budget,
+            temperature=getattr(ctx, "temperature", 0.7),
+        )
