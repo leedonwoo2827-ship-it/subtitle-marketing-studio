@@ -122,19 +122,18 @@ body {
   border-radius: 999px; font-size: 24px; font-weight: 900;
   margin-top: 24px; align-self: flex-start;
 }
-/* multi-block body: each block = small subhead + body paragraph (auto-broken
-   on sentence ends via sentence_break filter + white-space: pre-line). */
-.studio-card .block {
-  margin-bottom: 28px;
-}
+/* Text layout: headline row (reserved space for vertical alignment across cards) +
+   blocks-wrap (multi-block body) + tagline pinned to bottom via margin-top: auto. */
+.studio-card .headline-row { /* min-height set per-channel */ }
+.studio-card .blocks-wrap { padding-top: 4px; }
+.studio-card .block { margin-bottom: 26px; }
 .studio-card .block:last-of-type { margin-bottom: 0; }
 .studio-card .block-subhead {
-  font-weight: 800; line-height: 1.35;
-  margin-bottom: 8px;
+  font-weight: 800; line-height: 1.35; margin-bottom: 8px;
 }
-.studio-card .block-body {
-  line-height: 1.7; white-space: pre-line;
-}
+.studio-card .block-body { line-height: 1.7; white-space: pre-line; }
+/* Tagline is always pinned to the bottom of the text area */
+.studio-card .tagline { margin-top: auto; padding-top: 28px; }
 
 @media print {
   body { background: #fff; padding: 0; gap: 0; }
@@ -185,20 +184,19 @@ _TPL_THREADS_QUICK = """
   .threads-quick .text-half {
     flex: 1 1 65%;
     background: #ffffff;
-    padding: 52px 60px;
+    padding: 84px 60px 52px;
     display: flex; flex-direction: column;
     text-align: left;
   }
+  .threads-quick .text-half .headline-row { min-height: 110px; margin-bottom: 28px; }
   .threads-quick .text-half .headline {
     font-family: """ + _FONTS_DISPLAY + """;
     font-size: 56px; font-weight: 900; color: #0f172a;
-    line-height: 1.2; letter-spacing: -0.02em; margin: 0 0 28px;
+    line-height: 1.2; letter-spacing: -0.02em; margin: 0;
   }
   .threads-quick .text-half .block-subhead { font-size: 24px; color: #0f172a; }
   .threads-quick .text-half .block-body { font-size: 22px; color: #374151; }
-  .threads-quick .text-half .tagline {
-    margin-top: 18px; font-size: 22px; color: #1e3a8a; font-weight: 800;
-  }
+  .threads-quick .text-half .tagline { font-size: 22px; color: #1e3a8a; font-weight: 800; }
 </style>
 <div class="threads-quick">
   <div class="preamble">📐 Threads 간결형 3장 · 1080 × 1350</div>
@@ -209,13 +207,17 @@ _TPL_THREADS_QUICK = """
         <div class="big-icon">{{ c.icon | default('💬') }}</div>
       </div>
       <div class="text-half">
-        <div class="headline">{{ c.headline | default('') }}</div>
-        {% for b in c.blocks or [] %}
-        <div class="block">
-          {% if b.subhead %}<div class="block-subhead">{{ b.subhead }}</div>{% endif %}
-          {% if b.body %}<div class="block-body">{{ b.body | sentence_break }}</div>{% endif %}
+        <div class="headline-row">
+          {% if loop.first and c.headline %}<div class="headline">{{ c.headline }}</div>{% endif %}
         </div>
-        {% endfor %}
+        <div class="blocks-wrap">
+          {% for b in c.blocks or [] %}
+          <div class="block">
+            {% if b.subhead %}<div class="block-subhead">{{ b.subhead }}</div>{% endif %}
+            {% if b.body %}<div class="block-body">{{ b.body | sentence_break }}</div>{% endif %}
+          </div>
+          {% endfor %}
+        </div>
         {% if c.tagline %}<div class="tagline">{{ c.tagline }}</div>{% endif %}
       </div>
     </div>
@@ -262,14 +264,15 @@ _TPL_THREADS_INSIGHT = """
   .threads-insight .text-half {
     flex: 1 1 65%;
     background: #ffffff;
-    padding: 52px 60px;
+    padding: 84px 60px 52px;
     display: flex; flex-direction: column;
     text-align: left;
   }
+  .threads-insight .text-half .headline-row { min-height: 100px; margin-bottom: 26px; }
   .threads-insight .text-half .headline {
     font-family: """ + _FONTS_DISPLAY + """;
     font-size: 52px; font-weight: 900; color: #1e1b4b;
-    line-height: 1.2; letter-spacing: -0.02em; margin: 0 0 26px;
+    line-height: 1.2; letter-spacing: -0.02em; margin: 0;
   }
   .threads-insight .text-half .block-subhead { font-size: 24px; color: #1e1b4b; }
   .threads-insight .text-half .block-body { font-size: 22px; color: #374151; }
@@ -279,9 +282,7 @@ _TPL_THREADS_INSIGHT = """
   }
   .threads-insight .text-half .stat-value { font-size: 36px; font-weight: 900; color: #4338ca; }
   .threads-insight .text-half .stat-label { font-size: 18px; color: #4b5563; margin-top: 4px; }
-  .threads-insight .text-half .tagline {
-    margin-top: 18px; font-size: 22px; color: #4338ca; font-weight: 800;
-  }
+  .threads-insight .text-half .tagline { font-size: 22px; color: #4338ca; font-weight: 800; }
 </style>
 <div class="threads-insight">
   <div class="preamble">📐 Threads 인사이트 5장 · 1080 × 1350</div>
@@ -292,19 +293,23 @@ _TPL_THREADS_INSIGHT = """
         <div class="big-icon">{{ c.icon | default('💡') }}</div>
       </div>
       <div class="text-half">
-        <div class="headline">{{ c.headline | default('') }}</div>
-        {% for b in c.blocks or [] %}
-        <div class="block">
-          {% if b.subhead %}<div class="block-subhead">{{ b.subhead }}</div>{% endif %}
-          {% if b.body %}<div class="block-body">{{ b.body | sentence_break }}</div>{% endif %}
+        <div class="headline-row">
+          {% if loop.first and c.headline %}<div class="headline">{{ c.headline }}</div>{% endif %}
         </div>
-        {% endfor %}
-        {% if c.stat %}
-        <div class="stat-block">
-          <div class="stat-value">{{ c.stat.value | default('') }}</div>
-          <div class="stat-label">{{ c.stat.label | default('') }}</div>
+        <div class="blocks-wrap">
+          {% for b in c.blocks or [] %}
+          <div class="block">
+            {% if b.subhead %}<div class="block-subhead">{{ b.subhead }}</div>{% endif %}
+            {% if b.body %}<div class="block-body">{{ b.body | sentence_break }}</div>{% endif %}
+          </div>
+          {% endfor %}
+          {% if c.stat %}
+          <div class="stat-block">
+            <div class="stat-value">{{ c.stat.value | default('') }}</div>
+            <div class="stat-label">{{ c.stat.label | default('') }}</div>
+          </div>
+          {% endif %}
         </div>
-        {% endif %}
         {% if c.tagline %}<div class="tagline">{{ c.tagline }}</div>{% endif %}
       </div>
     </div>
@@ -339,10 +344,11 @@ _TPL_INSTAGRAM_INFO = """
     padding: 52px 60px;
     display: flex; flex-direction: column; text-align: left;
   }
+  .ig-info .text-half .headline-row { min-height: 100px; margin-bottom: 24px; }
   .ig-info .text-half .headline {
     font-family: """ + _FONTS_DISPLAY + """;
     font-size: 52px; font-weight: 900; color: #1f2937;
-    line-height: 1.2; letter-spacing: -0.02em; margin: 0 0 24px;
+    line-height: 1.2; letter-spacing: -0.02em; margin: 0;
   }
   .ig-info .text-half .block-subhead { font-size: 24px; color: #9d174d; }
   .ig-info .text-half .block-body { font-size: 22px; color: #374151; }
@@ -352,7 +358,7 @@ _TPL_INSTAGRAM_INFO = """
     background: #fce7f3; color: #9d174d; border: 2px solid #fbcfe8;
     font-size: 17px; font-weight: 700;
   }
-  .ig-info .text-half .tagline { margin-top: 14px; font-size: 20px; color: #be185d; font-weight: 800; }
+  .ig-info .text-half .tagline { font-size: 20px; color: #be185d; font-weight: 800; }
 </style>
 <div class="ig-info">
   <div class="preamble">📐 Instagram 정보형 5장 · 1080 × 1350</div>
@@ -363,18 +369,22 @@ _TPL_INSTAGRAM_INFO = """
         <div class="big-icon">{{ c.icon | default('✨') }}</div>
       </div>
       <div class="text-half">
-        <div class="headline">{{ c.headline | default('') }}</div>
-        {% for b in c.blocks or [] %}
-        <div class="block">
-          {% if b.subhead %}<div class="block-subhead">{{ b.subhead }}</div>{% endif %}
-          {% if b.body %}<div class="block-body">{{ b.body | sentence_break }}</div>{% endif %}
+        <div class="headline-row">
+          {% if loop.first and c.headline %}<div class="headline">{{ c.headline }}</div>{% endif %}
         </div>
-        {% endfor %}
-        {% if c.tags %}
-        <div class="tags-row">
-          {% for t in c.tags %}<span class="tag">#{{ t }}</span>{% endfor %}
+        <div class="blocks-wrap">
+          {% for b in c.blocks or [] %}
+          <div class="block">
+            {% if b.subhead %}<div class="block-subhead">{{ b.subhead }}</div>{% endif %}
+            {% if b.body %}<div class="block-body">{{ b.body | sentence_break }}</div>{% endif %}
+          </div>
+          {% endfor %}
+          {% if c.tags %}
+          <div class="tags-row">
+            {% for t in c.tags %}<span class="tag">#{{ t }}</span>{% endfor %}
+          </div>
+          {% endif %}
         </div>
-        {% endif %}
         {% if c.tagline %}<div class="tagline">{{ c.tagline }}</div>{% endif %}
       </div>
     </div>
@@ -411,15 +421,16 @@ _TPL_INSTAGRAM_STORY = """
   .ig-story .text-half {
     flex: 1 1 65%;
     background: #fefcf8;
-    padding: 52px 60px;
+    padding: 84px 60px 52px;
     display: flex; flex-direction: column;
     text-align: left;
     color: #292524;
   }
+  .ig-story .text-half .headline-row { min-height: 100px; margin-bottom: 24px; }
   .ig-story .text-half .headline {
     font-family: """ + _FONTS_SERIF + """;
     font-weight: 800; font-size: 56px; color: #1c1917;
-    line-height: 1.25; letter-spacing: -0.005em; margin: 0 0 24px;
+    line-height: 1.25; letter-spacing: -0.005em; margin: 0;
   }
   .ig-story .text-half .block-subhead {
     font-family: """ + _FONTS_SERIF + """;
@@ -431,7 +442,7 @@ _TPL_INSTAGRAM_STORY = """
   }
   .ig-story .text-half .tagline {
     font-family: """ + _FONTS_SERIF + """;
-    margin-top: 18px; font-size: 22px; color: #78716c; font-style: italic;
+    font-size: 22px; color: #78716c; font-style: italic;
   }
 </style>
 <div class="ig-story">
@@ -443,13 +454,17 @@ _TPL_INSTAGRAM_STORY = """
         <div class="big-icon">{{ c.icon | default('🌅') }}</div>
       </div>
       <div class="text-half">
-        <div class="headline">{{ c.headline | default('') }}</div>
-        {% for b in c.blocks or [] %}
-        <div class="block">
-          {% if b.subhead %}<div class="block-subhead">{{ b.subhead }}</div>{% endif %}
-          {% if b.body %}<div class="block-body">{{ b.body | sentence_break }}</div>{% endif %}
+        <div class="headline-row">
+          {% if loop.first and c.headline %}<div class="headline">{{ c.headline }}</div>{% endif %}
         </div>
-        {% endfor %}
+        <div class="blocks-wrap">
+          {% for b in c.blocks or [] %}
+          <div class="block">
+            {% if b.subhead %}<div class="block-subhead">{{ b.subhead }}</div>{% endif %}
+            {% if b.body %}<div class="block-body">{{ b.body | sentence_break }}</div>{% endif %}
+          </div>
+          {% endfor %}
+        </div>
         {% if c.tagline %}<div class="tagline">{{ c.tagline }}</div>{% endif %}
       </div>
     </div>
@@ -481,18 +496,19 @@ _TPL_KAKAO = """
   }
   .kk .text-half {
     flex: 1 1 68%; background: #ffffff;
-    padding: 36px 40px;
+    padding: 60px 40px 36px;
     display: flex; flex-direction: column; text-align: left;
   }
+  .kk .text-half .headline-row { min-height: 70px; margin-bottom: 16px; }
   .kk .text-half .headline {
     font-family: """ + _FONTS_DISPLAY + """;
     font-size: 36px; font-weight: 900; color: #1c1917;
-    line-height: 1.25; letter-spacing: -0.02em; margin: 0 0 16px;
+    line-height: 1.25; letter-spacing: -0.02em; margin: 0;
   }
   .kk .text-half .block { margin-bottom: 16px; }
   .kk .text-half .block-subhead { font-size: 18px; color: #422006; }
   .kk .text-half .block-body { font-size: 16px; color: #292524; }
-  .kk .text-half .tagline { margin-top: 12px; font-size: 16px; color: #b45309; font-weight: 800; }
+  .kk .text-half .tagline { font-size: 16px; color: #b45309; font-weight: 800; }
 </style>
 <div class="kk">
   <div class="preamble">📐 KakaoTalk 카드뉴스 · 800 × 800</div>
@@ -503,13 +519,17 @@ _TPL_KAKAO = """
         <div class="big-icon">{{ c.icon | default('💬') }}</div>
       </div>
       <div class="text-half">
-        <div class="headline">{{ c.headline | default('') }}</div>
-        {% for b in c.blocks or [] %}
-        <div class="block">
-          {% if b.subhead %}<div class="block-subhead">{{ b.subhead }}</div>{% endif %}
-          {% if b.body %}<div class="block-body">{{ b.body | sentence_break }}</div>{% endif %}
+        <div class="headline-row">
+          {% if loop.first and c.headline %}<div class="headline">{{ c.headline }}</div>{% endif %}
         </div>
-        {% endfor %}
+        <div class="blocks-wrap">
+          {% for b in c.blocks or [] %}
+          <div class="block">
+            {% if b.subhead %}<div class="block-subhead">{{ b.subhead }}</div>{% endif %}
+            {% if b.body %}<div class="block-body">{{ b.body | sentence_break }}</div>{% endif %}
+          </div>
+          {% endfor %}
+        </div>
         {% if c.tagline %}<div class="tagline">{{ c.tagline }}</div>{% endif %}
       </div>
     </div>
