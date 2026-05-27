@@ -35,12 +35,32 @@ class RunReport:
     results: dict[str, StudioResult] = field(default_factory=dict)
 
 
+def studio_dir_name(studio) -> str:
+    """Folder name with order prefix: e.g. '01_blog_editor'."""
+    return f"{studio.order:02d}_{studio.key}"
+
+
+def find_studio_dir(project_dir: Path, studio) -> Path | None:
+    """Return existing folder for a studio, checking both prefixed and legacy names."""
+    new = project_dir / studio_dir_name(studio)
+    if new.exists():
+        return new
+    legacy = project_dir / studio.key
+    if legacy.exists():
+        return legacy
+    return None
+
+
 def _execute_one(key: str, ctx: StudioContext) -> StudioResult:
     studio = get_studio(key)
     res = StudioResult(key=key, title=studio.title, status="running")
     try:
         text = studio.render(ctx)
-        out_dir = ctx.project_dir / key
+        # Migrate legacy folder if present
+        legacy = ctx.project_dir / studio.key
+        out_dir = ctx.project_dir / studio_dir_name(studio)
+        if legacy.exists() and not out_dir.exists():
+            legacy.rename(out_dir)
         out_dir.mkdir(parents=True, exist_ok=True)
         out_path = out_dir / "output.md"
         out_path.write_text(text, encoding="utf-8")

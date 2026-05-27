@@ -15,7 +15,7 @@ from dotenv import load_dotenv
 from core import llm as llm_mod
 from core import subtitle as subtitle_mod
 from core import user_settings as settings_mod
-from core.runner import StudioResult, run_all, run_one
+from core.runner import StudioResult, find_studio_dir, run_all, run_one, studio_dir_name
 from studio import list_studios, sections
 from studio._base import StudioContext
 
@@ -64,9 +64,12 @@ def _load_existing_results() -> None:
     if not pd:
         return
     for s in list_studios():
-        out = pd / s.key / "output.md"
+        folder = find_studio_dir(pd, s)
+        if folder is None:
+            continue
+        out = folder / "output.md"
         if out.exists() and s.key not in st.session_state.results:
-            html_path = pd / s.key / "output.html"
+            html_path = folder / "output.html"
             html_text = html_path.read_text(encoding="utf-8") if html_path.exists() else ""
             st.session_state.results[s.key] = StudioResult(
                 key=s.key, title=s.title, status="done",
@@ -285,7 +288,13 @@ def _run_bulk() -> None:
 def _delete_one_result(key: str) -> None:
     pd = _project_dir()
     if pd:
-        shutil.rmtree(pd / key, ignore_errors=True)
+        try:
+            s = get_studio(key)
+            # remove both new and legacy folders if either exists
+            shutil.rmtree(pd / studio_dir_name(s), ignore_errors=True)
+            shutil.rmtree(pd / key, ignore_errors=True)
+        except Exception:
+            pass
     st.session_state.results.pop(key, None)
     if st.session_state.selected_key == key:
         st.session_state.selected_key = None
@@ -296,6 +305,7 @@ def _delete_all_results() -> None:
     pd = _project_dir()
     if pd:
         for s in list_studios():
+            shutil.rmtree(pd / studio_dir_name(s), ignore_errors=True)
             shutil.rmtree(pd / s.key, ignore_errors=True)
     st.session_state.results = {}
     st.session_state.selected_key = None

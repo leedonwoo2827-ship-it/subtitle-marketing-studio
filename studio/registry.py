@@ -152,6 +152,7 @@ class PromotionStudio(StudioBase):
     section = BACK
     channel_section = "커뮤니티 (네이버 카페 / 밴드 / 디시 / 클리앙)"
     description = "댓글 참여·퀴즈·이벤트 등 텍스트 기반 프로모션 기획 3종"
+    max_tokens = 10240  # 3 아이디어 × 8필드 + 채널 메모, 잘림 방지
 
 
 class PressReleaseStudio(StudioBase):
