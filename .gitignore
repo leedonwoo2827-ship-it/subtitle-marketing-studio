@@ -14,3 +14,7 @@ data/projects/
 # _context/ 전체 — 사내 자료·샘플·키 포함, GitHub 업로드 금지
 _context/
 
+# _assets/ 는 작업용 자료(자막 원본·강의 PDF 등) — GitHub 업로드 금지
+# README 스크린샷은 루트의 images/ 폴더 사용
+_assets/
+

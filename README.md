@@ -2,12 +2,12 @@
 
 자막 파일 1개 → **15개 채널-레디 산출물** (블로그 9종 · 보도자료 · Threads · Instagram · KakaoTalk 카드뉴스)
 
-![Subtitle Marketing Studio 화면](_assets/screenshots/00-overview.png)
-
 ## 시작하기 (Windows)
 
 1. **`setup.bat`** 더블클릭 — 한 번만
 2. **`run.bat`** 더블클릭 — http://localhost:8620 열림
+
+![run.bat 실행 화면](images/00-runbat.png)
 
 ## 사용법
 
@@ -15,7 +15,7 @@
 
 ### 1단계 — 상단 `⚙ API 설정` 펼치기
 
-![1단계 API 설정](_assets/screenshots/01-api-setup.png)
+![1단계 API 설정](images/01-api-setup.png)
 
 타이틀 바로 아래 회색 막대를 클릭하면 펼쳐집니다.
 - **API URL**: `http://192.168.50.119:4000` (기본값, 사내 프록시)
@@ -26,13 +26,13 @@
 
 ### 2단계 — 좌측 사이드바에서 프로젝트 만들기
 
-![2단계 프로젝트 만들기](_assets/screenshots/02-project-create.png)
+![2단계 프로젝트 만들기](images/02-project-create.png)
 
 사이드바 `📂 프로젝트` → `(새 프로젝트)` → 이름 입력 (예: `youtube-ep01`) → **➕ 만들기**.
 
 ### 3단계 — 우측에서 자막 업로드 + 공통 변수 입력
 
-![3단계 자막 업로드](_assets/screenshots/03-subtitle-upload.png)
+![3단계 자막 업로드](images/03-subtitle-upload.png)
 
 **우측 🎬 자막 소스** 패널에서:
 - `.srt` / `.vtt` / `.ass` / `.txt` 드래그&드롭 → 라인·글자 수 확인
@@ -40,7 +40,7 @@
 
 ### 4단계 — 좌측에서 15개 일괄 생성
 
-![4단계 일괄 실행](_assets/screenshots/04-bulk-run.png)
+![4단계 일괄 실행](images/04-bulk-run.png)
 
 **좌측 🎛 스튜디오** 패널의 **▶ 전체 15개 실행** 클릭. 진행률 바가 차고 카드가 하나씩 ✅로 (~2~4분, 병렬 4).
 
@@ -48,10 +48,13 @@
 
 ### 5단계 — 결과 확인·다운로드
 
-![5단계 결과 확인](_assets/screenshots/05-output.png)
+![5단계 결과 확인 1](images/05-1-output.png)
 
-- 카드의 **열기** 버튼 → 중앙 패널에 미리보기·HTML·PNG·JSON 탭으로 표시
-- **재실행** 버튼 → 그 스튜디오만 다시 생성 (톤이 마음에 안 들 때)
+- 카드의 **📄** 버튼 → 중앙 패널에 미리보기·HTML·PNG·JSON 탭으로 표시
+- **🔄** 버튼 → 그 스튜디오만 다시 생성 (톤이 마음에 안 들 때)
+
+![5단계 결과 확인 2](images/05-2-output.png)
+
 - 중앙 패널의 **.md / .html / 🖼 PNG / 📄 .docx / 📦 ZIP** 버튼으로 추출
 
 카드뉴스 스튜디오의 `.md` 파일에는 **SNS 본문 초안**이 들어가 있어 그대로 채널 텍스트 입력란에 붙여넣기 가능. 보도자료는 `.docx`로 다운받아 기자 메일 첨부.
@@ -60,7 +63,7 @@
 
 ## 15개 스튜디오 라인업
 
-![15개 스튜디오](_assets/screenshots/06-studios.png)
+![15개 스튜디오](images/06-studios.png)
 
 **📝 블로그·보도자료 (텍스트, 1~10)**
 | # | 스튜디오 | 길이 | 타깃 |
