@@ -80,32 +80,9 @@ def _execute_one(key: str, ctx: StudioContext) -> StudioResult:
         res.html = html
         res.html_path = html_path
 
-        # Image rendering: Nano Banana preferred, fallback to Playwright PNG
-        if studio.image_renderer:
-            img_url = ctx.extra.get("image_base_url") or getattr(ctx.llm, "base_url", "")
-            img_key = ctx.extra.get("image_api_key") or getattr(ctx.llm, "api_key", "")
-            img_model = ctx.extra.get("image_model") or ""
-            img_result = image_render.render(
-                studio.image_renderer, text, out_dir,
-                base_url=img_url,
-                api_key=img_key,
-                model=img_model or image_render.IMAGE_MODEL,
-                brand=ctx.extra.get("brand_name", ""),
-            )
-            res.png_paths = list(img_result.paths)
-            res.png_error = img_result.error
-            res.image_cost_usd = img_result.cost_usd
-            res.image_renderer_used = "image" if img_result.paths else ""
-            # Fallback to Playwright capture if Nano Banana yielded nothing
-            if not img_result.paths and studio.png_renderer:
-                fallback = png_render.render(studio.png_renderer, html, out_dir)
-                res.png_paths = list(fallback.paths)
-                if fallback.paths:
-                    res.png_error = f"image gen failed ({img_result.error}); fell back to Playwright"
-                    res.image_renderer_used = "playwright"
-                else:
-                    res.png_error = f"image: {img_result.error} | playwright: {fallback.error}"
-        elif studio.png_renderer:
+        # Card studios → Playwright PNG (HTML+CSS via Jinja2 template).
+        # Image generation (Nano Banana) is kept available as opt-in only.
+        if studio.png_renderer:
             png_result = png_render.render(studio.png_renderer, html, out_dir)
             res.png_paths = list(png_result.paths)
             res.png_error = png_result.error

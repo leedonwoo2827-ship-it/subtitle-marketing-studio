@@ -231,18 +231,14 @@ def render_studio_panel() -> None:
         st.info("\n\n".join(missing))
         return
 
-    # Cost: bulk run = text-only (cheap); image cards run individually
-    text_studios = [s for s in list_studios() if not s.image_renderer]
+    # Bulk = text-only (blogs + press release). Card studios run via
+    # Jinja2 + Playwright (no per-card API charge — local browser render).
+    text_studios = [s for s in list_studios() if not s.png_renderer]
     n_text = len(text_studios)
-    actual_image_usd = sum(getattr(r, "image_cost_usd", 0) or 0 for r in st.session_state.results.values())
-    actual_image_krw = settings_mod.krw(actual_image_usd)
-    cost_line = (
-        f"💰 일괄 실행 = 텍스트 {n_text}개만 (블로그 + 보도자료) · 추정 비용 **<30원** · "
-        f"카드뉴스 5종은 카드당 **~60원** 개별 실행"
+    st.caption(
+        f"💰 일괄 실행 = 텍스트 {n_text}개만 (블로그 + 보도자료) · "
+        f"카드뉴스 5종은 HTML+Playwright 캡처(추가 API 비용 없음). 카드별 ▶ 재실행으로 개별 생성."
     )
-    if actual_image_usd > 0:
-        cost_line += f" · 누적 이미지 사용 **${actual_image_usd:.3f}** (≈**{actual_image_krw:,}원**)"
-    st.caption(cost_line)
 
     col_a, col_b, col_c = st.columns([2, 0.8, 0.8])
     with col_a:
@@ -312,8 +308,8 @@ def _run_bulk() -> None:
         st.error("프로젝트와 자막을 먼저 준비하세요.")
         return
 
-    # Bulk = text-only (image cards run individually to control cost)
-    text_keys = [s.key for s in list_studios() if not s.image_renderer]
+    # Bulk = text-only (image cards run individually via local Playwright)
+    text_keys = [s.key for s in list_studios() if not s.png_renderer]
     with st.spinner(f"텍스트 {len(text_keys)}개 실행 중… (모델: `{ctx.llm.model}`, 병렬 {ctx.parallelism})"):
         t0 = time.time()
         report = run_all(ctx, keys=text_keys)
@@ -450,12 +446,8 @@ def render_output_panel() -> None:
     with tab_objs[ti]:
         st.code(r.output, language="markdown")
 
-    if has_png and getattr(r, "image_cost_usd", 0):
-        used = "Nano Banana 이미지 생성" if r.image_renderer_used == "image" else "Playwright HTML 캡처"
-        st.caption(
-            f"🖼 {used} · 카드 {len(r.png_paths)}장 · "
-            f"비용 ${r.image_cost_usd:.3f} (≈{settings_mod.krw(r.image_cost_usd):,}원)"
-        )
+    if has_png:
+        st.caption(f"🖼 Playwright HTML 캡처 · 카드 {len(r.png_paths)}장 · 로컬 렌더 (API 비용 없음)")
     if r.png_error:
         st.warning(f"🖼 PNG 메모: {r.png_error}")
     if r.docx_error:

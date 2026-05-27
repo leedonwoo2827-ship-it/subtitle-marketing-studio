@@ -11,10 +11,13 @@ Two families:
 from __future__ import annotations
 
 import html as _html
+import json
 import re
 from typing import Callable
 
 import markdown as _md
+
+from core import card_templates
 
 # ─────────────────── shared HTML shell ───────────────────
 
@@ -401,60 +404,37 @@ def _render_cards(
     return _shell(title, body, extra_css=_CARD_BASE_CSS)
 
 
+def _render_json_cards(channel_key: str, md_text: str, *, title: str, brand: str) -> str:
+    """LLM returns JSON for card studios. Parse and render via Jinja2 template."""
+    try:
+        data = card_templates.parse_card_json(md_text)
+    except (json.JSONDecodeError, ValueError) as e:
+        # If the LLM ignored the JSON contract, fall back to generic rendering
+        return generic(
+            f"### ⚠️ JSON 파싱 실패\n\n`{type(e).__name__}: {e}`\n\n원본 출력 아래 (재실행 권장):\n\n---\n\n{md_text}",
+            title=title,
+        )
+    return card_templates.render_cards(channel_key, data, title=title, brand=brand)
+
+
 def cards_threads_quick(md_text: str, *, title: str, brand: str = "", **_) -> str:
-    return _render_cards(
-        md_text, title=title, brand=brand,
-        channel_key="threads_quick",
-        size_class="size-1080-1350",
-        theme_class="theme-threads",
-        size_tag="1080 × 1350 · Threads",
-        extra_sections=[("캡션", "💬 Threads 본문"), ("해시태그", "#️⃣ 해시태그")],
-    )
+    return _render_json_cards("cards_threads_quick", md_text, title=title, brand=brand)
 
 
 def cards_threads_insight(md_text: str, *, title: str, brand: str = "", **_) -> str:
-    return _render_cards(
-        md_text, title=title, brand=brand,
-        channel_key="threads_insight",
-        size_class="size-1080-1350",
-        theme_class="theme-threads-insight",
-        size_tag="1080 × 1350 · Threads",
-        extra_sections=[("캡션", "💬 Threads 본문"), ("해시태그", "#️⃣ 해시태그")],
-    )
+    return _render_json_cards("cards_threads_insight", md_text, title=title, brand=brand)
 
 
 def cards_instagram_info(md_text: str, *, title: str, brand: str = "", **_) -> str:
-    return _render_cards(
-        md_text, title=title, brand=brand,
-        channel_key="instagram_info",
-        size_class="size-1080-1350",
-        theme_class="theme-instagram-info dark-on-light",
-        size_tag="1080 × 1350 · Instagram",
-        # Caption/hashtags are inside the 5th card (parsed via _grab_labeled).
-        extra_sections=[("디자인 메모", "🎨 디자인 메모")],
-    )
+    return _render_json_cards("cards_instagram_info", md_text, title=title, brand=brand)
 
 
 def cards_instagram_story(md_text: str, *, title: str, brand: str = "", **_) -> str:
-    return _render_cards(
-        md_text, title=title, brand=brand,
-        channel_key="instagram_story",
-        size_class="size-1080-1350",
-        theme_class="theme-instagram-story dark-on-light",
-        size_tag="1080 × 1350 · Instagram",
-        extra_sections=[("디자인 메모", "🎨 디자인 메모")],
-    )
+    return _render_json_cards("cards_instagram_story", md_text, title=title, brand=brand)
 
 
 def cards_kakao(md_text: str, *, title: str, brand: str = "", **_) -> str:
-    return _render_cards(
-        md_text, title=title, brand=brand,
-        channel_key="kakao_cards",
-        size_class="size-800-800",
-        theme_class="theme-kakao dark-on-light",
-        size_tag="800 × 800 · KakaoTalk",
-        extra_sections=[("본문 텍스트", "💬 카카오 메시지 본문"), ("버튼 라벨", "🔘 버튼 라벨")],
-    )
+    return _render_json_cards("cards_kakao", md_text, title=title, brand=brand)
 
 
 # ─────────────────── dispatch ───────────────────
