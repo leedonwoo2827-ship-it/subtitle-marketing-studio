@@ -69,11 +69,21 @@ def _slice_until(text: str, start_markers: list[str], stop_markers: list[str]) -
     return text[start:end].strip()
 
 
+_RX_PLACEHOLDER = re.compile(r"\{([a-zA-Z_][a-zA-Z0-9_]*)\}")
+
+
 def _safe_format(template: str, mapping: dict) -> str:
-    class _D(dict):
-        def __missing__(self, key):  # type: ignore[override]
-            return "{" + key + "}"
-    return template.format_map(_D(mapping))
+    """Substitute only `{identifier}` placeholders present in `mapping`.
+
+    Leaves anything else inside braces (e.g. JSON examples in the prompt
+    like `{ "role": "후킹" }`) completely untouched. This is safer than
+    `str.format_map` which tries to parse anything between `{...}` as a
+    format spec and chokes on JSON.
+    """
+    def _repl(m):
+        key = m.group(1)
+        return str(mapping[key]) if key in mapping else m.group(0)
+    return _RX_PLACEHOLDER.sub(_repl, template)
 
 
 class StudioBase:
