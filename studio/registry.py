@@ -140,20 +140,10 @@ class BlogBrunchEmotionalStudio(StudioBase):
     max_tokens = 8192
 
 
-class BlogVelogTechStudio(StudioBase):
-    key = "blog_velog_tech"
-    order = 13
-    title = "13. 블로그 Velog 기술형"
-    section = BLOG
-    channel_section = "블로그 Velog 기술형"
-    description = "2,000자 · 코드블록·단계별·TIL 톤"
-    max_tokens = 7168
-
-
 class BlogPersonalRetroStudio(StudioBase):
     key = "blog_personal_retro"
-    order = 14
-    title = "14. 블로그 개인 기술블로그 회고형"
+    order = 13
+    title = "13. 블로그 개인 기술블로그 회고형"
     section = BLOG
     channel_section = "블로그 개인 기술블로그 회고형"
     description = "1,500자 · 회고·다이어리, 짧고 정직"
@@ -162,8 +152,8 @@ class BlogPersonalRetroStudio(StudioBase):
 
 class BlogColumnOpStudio(StudioBase):
     key = "blog_column_op"
-    order = 15
-    title = "15. 블로그 칼럼 시사형"
+    order = 14
+    title = "14. 블로그 칼럼 시사형"
     section = BLOG
     channel_section = "블로그 칼럼 시사형"
     description = "2,500자 · 시사·날카로움, 논거·반증"
@@ -172,8 +162,8 @@ class BlogColumnOpStudio(StudioBase):
 
 class BlogWordpressENStudio(StudioBase):
     key = "blog_wordpress_en"
-    order = 16
-    title = "16. 블로그 워드프레스 영문 SEO"
+    order = 15
+    title = "15. 블로그 워드프레스 영문 SEO"
     section = BLOG
     channel_section = "블로그 워드프레스 영문 SEO"
     description = "~3,000 words (English) · WordPress SEO"
@@ -193,7 +183,6 @@ REGISTRY = [
     BlogTistorySEOStudio(),
     BlogMediumEssayStudio(),
     BlogBrunchEmotionalStudio(),
-    BlogVelogTechStudio(),
     BlogPersonalRetroStudio(),
     BlogColumnOpStudio(),
     BlogWordpressENStudio(),
