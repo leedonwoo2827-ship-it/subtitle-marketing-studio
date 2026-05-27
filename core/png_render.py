@@ -73,7 +73,16 @@ def render(channel_key: str, html_text: str, out_dir: Path) -> PNGRenderResult:
                     device_scale_factor=1,
                 )
                 page = context.new_page()
-                page.set_content(html_text, wait_until="load")
+                # `networkidle` lets Google Fonts CSS+woff2 finish downloading.
+                page.set_content(html_text, wait_until="networkidle")
+                # Also explicitly wait for the FontFace set to be loaded
+                # (handles the case where fonts are still rendering after
+                # CSS finished downloading).
+                try:
+                    page.evaluate("document.fonts && document.fonts.ready")
+                    page.wait_for_function("document.fonts.status === 'loaded'", timeout=8000)
+                except Exception:
+                    pass  # If browser blocks the API, fall through — fallback fonts will be used
                 cards = page.query_selector_all(".studio-card")
                 if not cards:
                     return PNGRenderResult(paths=[], error="no .studio-card found")

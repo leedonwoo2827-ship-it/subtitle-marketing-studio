@@ -19,7 +19,21 @@ from typing import Any
 
 import jinja2
 
-_FONTS = "'Pretendard', 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif"
+_GOOGLE_FONTS_LINK = (
+    '<link rel="preconnect" href="https://fonts.googleapis.com">'
+    '<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>'
+    '<link href="https://fonts.googleapis.com/css2?'
+    'family=Noto+Sans+KR:wght@300;400;500;700;800;900&'
+    'family=Black+Han+Sans&'
+    'family=Nanum+Myeongjo:wght@400;700;800&'
+    'family=Gowun+Batang:wght@400;700&'
+    'display=swap" rel="stylesheet">'
+)
+
+# Sans default = Noto Sans KR. Serif for storytelling = Nanum Myeongjo / Gowun Batang.
+_FONTS_SANS = "'Noto Sans KR', 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif"
+_FONTS_DISPLAY = "'Black Han Sans', 'Noto Sans KR', 'Apple SD Gothic Neo', sans-serif"
+_FONTS_SERIF = "'Nanum Myeongjo', 'Gowun Batang', 'Apple SD Gothic Neo', serif"
 
 # Shared rules — every template uses these via the wrap shell.
 _BASE_CSS = """
@@ -27,7 +41,7 @@ _BASE_CSS = """
 html, body { width: 100%; }
 body {
   background: #e5e7eb;
-  font-family: """ + _FONTS + """;
+  font-family: """ + _FONTS_SANS + """;
   padding: 32px 16px;
   display: flex; flex-direction: column; align-items: center; gap: 40px;
 }
@@ -40,7 +54,7 @@ body {
 .studio-card {
   position: relative; overflow: hidden;
   box-shadow: 0 24px 60px rgba(0,0,0,0.18);
-  font-family: """ + _FONTS + """;
+  font-family: """ + _FONTS_SANS + """;
   word-break: keep-all;
   display: flex;
   align-items: stretch; justify-content: stretch;
@@ -89,7 +103,8 @@ body {
   margin: 28px 0;
 }
 .studio-card .headline {
-  font-weight: 900; letter-spacing: -0.02em; line-height: 1.18;
+  font-family: """ + _FONTS_DISPLAY + """;
+  font-weight: 900; letter-spacing: -0.02em; line-height: 1.2;
   margin-bottom: 24px;
 }
 .studio-card .subhead {
@@ -317,16 +332,16 @@ _TPL_INSTAGRAM_STORY = """
     background: #fefcf8;
     color: #292524;
   }
-  .ig-story .channel-strip .ch-name { color: #fafaf9; font-style: italic; font-family: Georgia, serif; }
+  .ig-story .channel-strip .ch-name { color: #fafaf9; font-style: italic; font-family: """ + _FONTS_SERIF + """; }
   .ig-story .badge { background: #292524; color: #fefcf8; border-radius: 50%; }
-  .ig-story .role-tag { background: transparent; color: #78716c; font-family: Georgia, serif; font-style: italic; }
+  .ig-story .role-tag { background: transparent; color: #78716c; font-family: """ + _FONTS_SERIF + """; font-style: italic; }
   .ig-story .headline {
-    font-family: Georgia, 'Apple SD Gothic Neo', serif;
-    font-size: 68px; color: #1c1917;
+    font-family: """ + _FONTS_SERIF + """;
+    font-weight: 800; font-size: 68px; color: #1c1917; letter-spacing: -0.005em;
   }
   .ig-story .subhead { color: #57534e; font-size: 28px; }
   .ig-story .caption-block { background: #f5f5f4; }
-  .ig-story .caption-body { font-style: italic; font-family: Georgia, 'Apple SD Gothic Neo', serif; }
+  .ig-story .caption-body { font-family: """ + _FONTS_SERIF + """; }
   .ig-story .hashtags-row { color: #78716c; }
 </style>
 <div class="ig-story">
@@ -453,6 +468,7 @@ def _wrap(title: str, body_html: str) -> str:
         '<meta charset="utf-8">\n'
         f'<title>{_html.escape(title)}</title>\n'
         '<meta name="viewport" content="width=device-width, initial-scale=1">\n'
+        + _GOOGLE_FONTS_LINK + '\n'
         f'<style>{_BASE_CSS}</style>\n'
         '</head><body>\n'
         f'{body_html}\n'
