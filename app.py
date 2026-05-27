@@ -338,7 +338,16 @@ def render_output_panel() -> None:
         return
 
     r: StudioResult = st.session_state.results[key]
-    st.markdown(f"#### {r.title}")
+    head_l, head_r = st.columns([5, 1])
+    with head_l:
+        st.markdown(f"#### {r.title}")
+    with head_r:
+        with st.popover("🗑 삭제", use_container_width=True):
+            st.caption(f"`{r.key}` 산출물을 삭제합니다. (`▶ 재실행` 또는 `▶ 전체 17개 실행`으로 다시 생성 가능)")
+            if st.button("🗑 이 산출물 삭제", type="primary", use_container_width=True, key=f"out_del_{r.key}"):
+                _delete_one_result(r.key)
+                st.rerun()
+
     if r.status != "done":
         st.warning(f"상태: {r.status}")
         if r.error:
