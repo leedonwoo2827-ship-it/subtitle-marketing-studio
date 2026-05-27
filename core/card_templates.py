@@ -32,7 +32,9 @@ _GOOGLE_FONTS_LINK = (
 
 # Sans default = Noto Sans KR. Serif for storytelling = Nanum Myeongjo / Gowun Batang.
 _FONTS_SANS = "'Noto Sans KR', 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif"
-_FONTS_DISPLAY = "'Black Han Sans', 'Noto Sans KR', 'Apple SD Gothic Neo', sans-serif"
+# Headline font intentionally NOT Black Han Sans — that face is single-weight
+# and reads too chunky in card headlines. Use Noto Sans KR at weight 800.
+_FONTS_DISPLAY = "'Noto Sans KR', 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif"
 _FONTS_SERIF = "'Nanum Myeongjo', 'Gowun Batang', 'Apple SD Gothic Neo', serif"
 
 # Shared rules — every template uses these via the wrap shell.
@@ -83,7 +85,7 @@ body {
 }
 .studio-card .headline {
   font-family: """ + _FONTS_DISPLAY + """;
-  font-weight: 900; letter-spacing: -0.02em; line-height: 1.2;
+  font-weight: 800; letter-spacing: -0.02em; line-height: 1.2;
   margin-bottom: 24px;
 }
 .studio-card .subhead {
@@ -191,7 +193,7 @@ _TPL_THREADS_QUICK = """
   .threads-quick .text-half .headline-row { min-height: 110px; margin-bottom: 28px; }
   .threads-quick .text-half .headline {
     font-family: """ + _FONTS_DISPLAY + """;
-    font-size: 56px; font-weight: 900; color: #0f172a;
+    font-size: 56px; font-weight: 800; color: #0f172a;
     line-height: 1.2; letter-spacing: -0.02em; margin: 0;
   }
   .threads-quick .text-half .block-subhead { font-size: 24px; color: #0f172a; }
@@ -271,7 +273,7 @@ _TPL_THREADS_INSIGHT = """
   .threads-insight .text-half .headline-row { min-height: 100px; margin-bottom: 26px; }
   .threads-insight .text-half .headline {
     font-family: """ + _FONTS_DISPLAY + """;
-    font-size: 52px; font-weight: 900; color: #1e1b4b;
+    font-size: 52px; font-weight: 800; color: #1e1b4b;
     line-height: 1.2; letter-spacing: -0.02em; margin: 0;
   }
   .threads-insight .text-half .block-subhead { font-size: 24px; color: #1e1b4b; }
@@ -347,7 +349,7 @@ _TPL_INSTAGRAM_INFO = """
   .ig-info .text-half .headline-row { min-height: 100px; margin-bottom: 24px; }
   .ig-info .text-half .headline {
     font-family: """ + _FONTS_DISPLAY + """;
-    font-size: 52px; font-weight: 900; color: #1f2937;
+    font-size: 52px; font-weight: 800; color: #1f2937;
     line-height: 1.2; letter-spacing: -0.02em; margin: 0;
   }
   .ig-info .text-half .block-subhead { font-size: 24px; color: #9d174d; }
@@ -502,7 +504,7 @@ _TPL_KAKAO = """
   .kk .text-half .headline-row { min-height: 70px; margin-bottom: 16px; }
   .kk .text-half .headline {
     font-family: """ + _FONTS_DISPLAY + """;
-    font-size: 36px; font-weight: 900; color: #1c1917;
+    font-size: 36px; font-weight: 800; color: #1c1917;
     line-height: 1.25; letter-spacing: -0.02em; margin: 0;
   }
   .kk .text-half .block { margin-bottom: 16px; }
