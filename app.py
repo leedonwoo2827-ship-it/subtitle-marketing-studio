@@ -71,10 +71,15 @@ def _load_existing_results() -> None:
         if out.exists() and s.key not in st.session_state.results:
             html_path = folder / "output.html"
             html_text = html_path.read_text(encoding="utf-8") if html_path.exists() else ""
+            cards_dir = folder / "cards"
+            png_paths = sorted(cards_dir.glob("card_*.png")) if cards_dir.exists() else []
+            docx_path = folder / "output.docx"
             st.session_state.results[s.key] = StudioResult(
                 key=s.key, title=s.title, status="done",
                 output=out.read_text(encoding="utf-8"), output_path=out,
                 html=html_text, html_path=html_path if html_path.exists() else None,
+                png_paths=png_paths,
+                docx_path=docx_path if docx_path.exists() else None,
             )
 
 
@@ -118,7 +123,7 @@ def render_sidebar() -> None:
             st.caption(f"📁 `data/projects/{st.session_state.project_name}/`")
 
             with st.expander("🗑 프로젝트 삭제", expanded=False):
-                st.caption(f"`{st.session_state.project_name}` 프로젝트 폴더(자막·17개 산출물 전체)를 디스크에서 삭제합니다.")
+                st.caption(f"`{st.session_state.project_name}` 프로젝트 폴더(자막·16개 산출물 전체)를 디스크에서 삭제합니다.")
                 confirm = st.checkbox("네, 정말 삭제합니다", key=f"del_confirm_{st.session_state.project_name}")
                 if st.button("🗑 삭제 실행", disabled=not confirm, use_container_width=True, type="secondary"):
                     pd = PROJECTS_DIR / st.session_state.project_name
@@ -197,20 +202,20 @@ def render_studio_panel() -> None:
             missing.append("**1단계** — 좌측 사이드바(`📂 프로젝트`) → `(새 프로젝트)` 선택 → 이름 입력 → `➕ 만들기`")
         if not has_subtitle:
             missing.append("**2단계** — 우측 `🎬 자막 소스` 패널에서 .srt/.vtt/.ass/.txt 업로드")
-        missing.append("**3단계** — 여기서 `▶ 전체 17개 실행`")
+        missing.append("**3단계** — 여기서 `▶ 전체 16개 실행`")
         st.info("\n\n".join(missing))
         return
 
     col_a, col_b, col_c = st.columns([2, 0.8, 0.8])
     with col_a:
-        if st.button("▶ 전체 17개 실행", type="primary", use_container_width=True, disabled=not ready):
+        if st.button("▶ 전체 16개 실행", type="primary", use_container_width=True, disabled=not ready):
             _run_bulk()
     with col_b:
         done_n = sum(1 for r in st.session_state.results.values() if r.status == "done")
-        st.metric("완료", f"{done_n}/17")
+        st.metric("완료", f"{done_n}/16")
     with col_c:
         with st.popover("🗑 초기화", use_container_width=True, disabled=not st.session_state.results):
-            st.caption("17개 산출물을 모두 비웁니다. 자막·프로젝트는 유지됩니다.")
+            st.caption("16개 산출물을 모두 비웁니다. 자막·프로젝트는 유지됩니다.")
             if st.checkbox("네, 모두 비웁니다", key="del_all_confirm"):
                 if st.button("🗑 전체 초기화 실행", use_container_width=True):
                     _delete_all_results()
@@ -259,7 +264,7 @@ def _run_bulk() -> None:
         st.error("프로젝트와 자막을 먼저 준비하세요.")
         return
 
-    with st.spinner(f"17개 스튜디오 실행 중… (모델: `{ctx.llm.model}`, 병렬 {ctx.parallelism})"):
+    with st.spinner(f"16개 스튜디오 실행 중… (모델: `{ctx.llm.model}`, 병렬 {ctx.parallelism})"):
         t0 = time.time()
         report = run_all(ctx)
         elapsed = time.time() - t0
@@ -270,9 +275,9 @@ def _run_bulk() -> None:
     errs = [r for r in report.results.values() if r.status == "error"]
 
     if done and not errs:
-        st.success(f"✅ 17개 모두 완료 · {elapsed:.1f}s")
+        st.success(f"✅ 16개 모두 완료 · {elapsed:.1f}s")
     elif done:
-        st.warning(f"⚠️ {len(done)}/17 완료, {len(errs)}개 실패 · {elapsed:.1f}s")
+        st.warning(f"⚠️ {len(done)}/16 완료, {len(errs)}개 실패 · {elapsed:.1f}s")
     else:
         st.error(f"❌ 모든 스튜디오 실패 · {elapsed:.1f}s — API 키·URL·연결을 확인하세요.")
 
@@ -310,7 +315,7 @@ def _delete_all_results() -> None:
     st.session_state.results = {}
     st.session_state.selected_key = None
     st.session_state.pop("del_all_confirm", None)
-    st.toast("17개 산출물 모두 비움 (자막은 유지)", icon="🗑")
+    st.toast("16개 산출물 모두 비움 (자막은 유지)", icon="🗑")
 
 
 def _run_single(key: str) -> None:
@@ -353,7 +358,7 @@ def render_output_panel() -> None:
         st.markdown(f"#### {r.title}")
     with head_r:
         with st.popover("🗑 삭제", use_container_width=True):
-            st.caption(f"`{r.key}` 산출물을 삭제합니다. (`▶ 재실행` 또는 `▶ 전체 17개 실행`으로 다시 생성 가능)")
+            st.caption(f"`{r.key}` 산출물을 삭제합니다. (`▶ 재실행` 또는 `▶ 전체 16개 실행`으로 다시 생성 가능)")
             if st.button("🗑 이 산출물 삭제", type="primary", use_container_width=True, key=f"out_del_{r.key}"):
                 _delete_one_result(r.key)
                 st.rerun()
@@ -364,43 +369,88 @@ def render_output_panel() -> None:
             st.code(r.error)
         return
 
-    tab_view, tab_html, tab_raw = st.tabs(["📝 미리보기", "🎨 HTML 미리보기", "🔧 Markdown 원본"])
-    with tab_view:
+    studio_obj = get_studio(r.key)
+    has_png = bool(r.png_paths)
+    has_docx = bool(r.docx_path)
+
+    tabs = ["📝 미리보기", "🎨 HTML 미리보기", "🔧 Markdown 원본"]
+    if has_png:
+        tabs.insert(1, "🖼 PNG 카드")
+    tab_objs = st.tabs(tabs)
+    ti = 0
+    with tab_objs[ti]:
         st.markdown(r.output)
-    with tab_html:
+    ti += 1
+    if has_png:
+        with tab_objs[ti]:
+            cols = st.columns(min(len(r.png_paths), 5))
+            for i, p in enumerate(r.png_paths):
+                with cols[i % len(cols)]:
+                    st.image(str(p), caption=f"card_{i + 1}.png", use_container_width=True)
+        ti += 1
+    with tab_objs[ti]:
         if r.html:
-            studio_obj = get_studio(r.key)
-            height = 1600 if studio_obj.html_renderer == "instagram_cards" else 900
+            is_card = studio_obj.html_renderer.startswith("cards_")
+            height = 1800 if is_card else 900
             st.components.v1.html(r.html, height=height, scrolling=True)
         else:
             st.caption("HTML 미리보기 없음. 재실행하면 생성됩니다.")
-    with tab_raw:
+    ti += 1
+    with tab_objs[ti]:
         st.code(r.output, language="markdown")
 
-    c1, c2, c3 = st.columns(3)
-    with c1:
+    if r.png_error:
+        st.warning(f"🖼 PNG 실패: {r.png_error}")
+    if r.docx_error:
+        st.warning(f"📄 DOCX 실패: {r.docx_error}")
+
+    cols = st.columns(5)
+    with cols[0]:
         st.download_button(
-            "💾 .md",
-            data=r.output.encode("utf-8"),
+            "💾 .md", data=r.output.encode("utf-8"),
             file_name=_prefixed_name(r.key, "md"),
-            mime="text/markdown",
-            use_container_width=True,
+            mime="text/markdown", use_container_width=True,
             key=f"dl_md_{r.key}",
         )
-    with c2:
+    with cols[1]:
         if r.html:
             st.download_button(
-                "🎨 .html",
-                data=r.html.encode("utf-8"),
+                "🎨 .html", data=r.html.encode("utf-8"),
                 file_name=_prefixed_name(r.key, "html"),
-                mime="text/html",
-                use_container_width=True,
+                mime="text/html", use_container_width=True,
                 key=f"dl_html_{r.key}",
             )
         else:
             st.button("🎨 .html", disabled=True, use_container_width=True, key=f"dl_html_dis_{r.key}")
-    with c3:
-        _render_zip_download(container=c3)
+    with cols[2]:
+        if has_png:
+            buf = io.BytesIO()
+            with zipfile.ZipFile(buf, "w", zipfile.ZIP_DEFLATED) as zf:
+                for i, p in enumerate(r.png_paths, start=1):
+                    zf.writestr(f"card_{i}.png", p.read_bytes())
+            st.download_button(
+                f"🖼 PNG {len(r.png_paths)}장",
+                data=buf.getvalue(),
+                file_name=f"{_prefixed_name(r.key, 'png')[:-4]}_cards.zip",
+                mime="application/zip", use_container_width=True,
+                key=f"dl_png_{r.key}",
+            )
+        else:
+            st.button("🖼 PNG", disabled=True, use_container_width=True, key=f"dl_png_dis_{r.key}")
+    with cols[3]:
+        if has_docx and r.docx_path is not None:
+            st.download_button(
+                "📄 .docx",
+                data=r.docx_path.read_bytes(),
+                file_name=_prefixed_name(r.key, "docx"),
+                mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+                use_container_width=True,
+                key=f"dl_docx_{r.key}",
+            )
+        else:
+            st.button("📄 .docx", disabled=True, use_container_width=True, key=f"dl_docx_dis_{r.key}")
+    with cols[4]:
+        _render_zip_download(container=cols[4])
 
 
 def _render_zip_download(container=None) -> None:
@@ -415,6 +465,22 @@ def _render_zip_download(container=None) -> None:
             if r.html:
                 html_name = _prefixed_name(r.key, "html")
                 zf.writestr(f"html/{html_name}", r.html)
+            if r.png_paths:
+                try:
+                    s_obj = get_studio(r.key)
+                    folder = f"png/{s_obj.order:02d}_{r.key}"
+                except KeyError:
+                    folder = f"png/{r.key}"
+                for i, p in enumerate(r.png_paths, start=1):
+                    try:
+                        zf.writestr(f"{folder}/card_{i}.png", p.read_bytes())
+                    except OSError:
+                        pass
+            if r.docx_path is not None:
+                try:
+                    zf.writestr(f"docx/{_prefixed_name(r.key, 'docx')}", r.docx_path.read_bytes())
+                except OSError:
+                    pass
     target = container or st
     target.download_button(
         f"📦 ZIP ({len(done)})",
@@ -457,20 +523,20 @@ def render_source_panel() -> None:
             preview = r.text[:1500] + ("…" if len(r.text) > 1500 else "")
             st.text_area("preview", preview, height=240, label_visibility="collapsed")
     else:
-        st.caption("자막을 업로드하면 17개 스튜디오가 활성화됩니다.")
+        st.caption("자막을 업로드하면 16개 스튜디오가 활성화됩니다.")
 
     st.divider()
     st.subheader("📝 공통 변수")
     s = st.session_state.settings
     s.target_keyword = st.text_input("타깃 키워드", value=s.target_keyword, placeholder="예: AI 마케팅 자동화", key="kw")
     s.brand_name = st.text_input("브랜드명", value=s.brand_name, placeholder="예: Acme Corp", key="brand")
-    st.caption("17개 스튜디오 프롬프트에 자동 주입됩니다. (선택)")
+    st.caption("16개 스튜디오 프롬프트에 자동 주입됩니다. (선택)")
 
     st.divider()
     with st.expander("ℹ️ 산출물 정책", expanded=False):
         st.markdown(
             "- 자막 원문은 외부 노출 금지. **재가공된 텍스트만** 산출됩니다.\n"
-            "- 17개 산출물은 `data/projects/<프로젝트>/<key>/output.md`에 저장됩니다.\n"
+            "- 16개 산출물은 `data/projects/<프로젝트>/<key>/output.md`에 저장됩니다.\n"
             "- 채널별 톤·길이 규칙은 [knowledge/channel-style-research.md](knowledge/channel-style-research.md) 참조."
         )
 

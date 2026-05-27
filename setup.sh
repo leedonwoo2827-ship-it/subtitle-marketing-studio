@@ -9,6 +9,11 @@ fi
 source .venv/bin/activate
 python -m pip install --upgrade pip
 pip install -e .
+
+echo
+echo "[setup] Installing Chromium for Playwright (PNG rendering)..."
+python -m playwright install chromium || echo "[warn] playwright install failed — PNG cards may not work"
+
 if [ ! -f ".env" ]; then
   cp .env.example .env
   echo "Created .env from .env.example"
